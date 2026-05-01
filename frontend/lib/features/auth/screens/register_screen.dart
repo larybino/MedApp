@@ -1,11 +1,11 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/features/auth/screens/register_screen.dart';
+import 'package:frontend/features/auth/screens/login_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatelessWidget {
+  const RegisterScreen({super.key});
 
   @override
 Widget build(BuildContext context) {
@@ -25,7 +25,7 @@ Widget build(BuildContext context) {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(height: height * 0.08), 
+              SizedBox(height: height * 0.08),
               Text(
                 'MedApp',
                 style: GoogleFonts.manrope(
@@ -36,7 +36,7 @@ Widget build(BuildContext context) {
               ),
               const SizedBox(height: 8),
               Text(
-                'Login',
+                'Cadastro',
                 style: GoogleFonts.manrope(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
@@ -67,6 +67,26 @@ Widget build(BuildContext context) {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      Text('Nome',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 18, fontWeight: FontWeight.w700,
+                        color: AppColors.secondary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      keyboardType: TextInputType.emailAddress,
+                      style: GoogleFonts.dmSans(color: AppColors.secondary),
+                      decoration: InputDecoration(
+                        filled: true, fillColor: AppColors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: height * 0.02),
                     Text('Email',
                       style: GoogleFonts.dmSans(
                         fontSize: 18, fontWeight: FontWeight.w700,
@@ -86,7 +106,7 @@ Widget build(BuildContext context) {
                       ),
                     ),
 
-                    SizedBox(height: height * 0.05),
+                    SizedBox(height: height * 0.02),
 
                     Text('Senha',
                       style: GoogleFonts.dmSans(
@@ -107,32 +127,27 @@ Widget build(BuildContext context) {
                       ),
                     ),
 
-                    SizedBox(height: height * 0.05),
-
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: 20, height: 20,
-                          child: Checkbox(
-                            value: false,
-                            onChanged: (_) {},
-                            activeColor: AppColors.secondary,
-                            side: const BorderSide(color: AppColors.secondary),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
+                    SizedBox(height: height * 0.02),
+                    Text('Confirmar senha',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 18, fontWeight: FontWeight.w700,
+                        color: AppColors.secondary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      keyboardType: TextInputType.emailAddress,
+                      style: GoogleFonts.dmSans(color: AppColors.secondary),
+                      decoration: InputDecoration(
+                        filled: true, fillColor: AppColors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
                         ),
-                        const SizedBox(width: 8),
-                        Text('Manter-se logado',
-                          style: GoogleFonts.dmSans(
-                            fontSize: 18,  fontWeight: FontWeight.w700, color: AppColors.secondary,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
 
-                    SizedBox(height: height * 0.05),
+                    SizedBox(height: height * 0.03),
 
                     SizedBox(
                       width: double.infinity,
@@ -146,7 +161,7 @@ Widget build(BuildContext context) {
                             borderRadius: BorderRadius.circular(30),
                           ),
                         ),
-                        child: Text('Entrar',
+                        child: Text('Cadastrar',
                           style: GoogleFonts.syne(
                             fontSize: 24, fontWeight: FontWeight.w700,
                           ),
@@ -154,32 +169,31 @@ Widget build(BuildContext context) {
                       ),
                     ),
 
-                    SizedBox(height: height * 0.05),
+                    SizedBox(height: height * 0.03),
                     Center(
                       child: GestureDetector(
-                        onTap: () {},
-                        child: RichText(
-                          textAlign: TextAlign.center,
-                          text: TextSpan(
-                            text: 'Não possui uma conta? ',
-                            style: GoogleFonts.dmSans(fontSize: 18, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
-                            children: [
-                              TextSpan(text: 'Cadastra-se',
-                                style: TextStyle(fontSize: 18, color: AppColors.secondary,
-                                  fontWeight: FontWeight.w800),
-                                  recognizer: TapGestureRecognizer()
-                                  ..onTap = () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => const RegisterScreen(),
-                                      ),
-                                    );
-                                  },
-                              ),
-                            ],
+                    onTap: () {},
+                    child: RichText(
+                      text: TextSpan(
+                        text: 'Já possui uma conta? ',
+                        style: GoogleFonts.dmSans(fontSize: 18, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                        children: [
+                          TextSpan(text: 'Entrar',
+                            style: TextStyle(fontSize: 18, color: AppColors.secondary,
+                              fontWeight: FontWeight.w800),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const LoginScreen(),
+                                  ),
+                                );
+                              },
                           ),
-                        ),
+                        ],
                       ),
+                    ),
+                  ),
                     ),
                   ],
                 ),

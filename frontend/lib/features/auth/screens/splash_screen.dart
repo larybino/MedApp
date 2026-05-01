@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'login_screen.dart';
+import 'register_screen.dart';
 import '../../../core/theme/app_colors.dart';
 
 class SplashScreen extends StatelessWidget {
@@ -33,7 +34,13 @@ class SplashScreen extends StatelessWidget {
                  SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const RegisterScreen(),
+                          ),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: AppColors.secondary,
