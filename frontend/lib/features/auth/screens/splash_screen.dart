@@ -1,5 +1,7 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'login_screen.dart';
 import '../../../core/theme/app_colors.dart';
 
 class SplashScreen extends StatelessWidget {
@@ -59,7 +61,16 @@ class SplashScreen extends StatelessWidget {
                         children: [
                           TextSpan(text: 'Entrar',
                             style: TextStyle(fontSize: 18, color: AppColors.primary,
-                              fontWeight: FontWeight.w800)),
+                              fontWeight: FontWeight.w800),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const LoginScreen(),
+                                  ),
+                                );
+                              },
+                          ),
                         ],
                       ),
                     ),
