@@ -1,5 +1,5 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/shared/widgets/index.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
@@ -10,6 +10,8 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final height = MediaQuery.of(context).size.height;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -24,86 +26,61 @@ class SplashScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Column(
                 children: [
-                  const SizedBox(height: 90),
-                  Text('MedApp',
-                    style: GoogleFonts.manrope(
-                      fontSize: 52, fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
-                    )),
+                  SizedBox(height: height * 0.08),
+                  const AuthHeader(title: ''),
                   const Spacer(),
-                 SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const RegisterScreen(),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.secondary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+                  PrimaryButton(
+                    label: 'Crie sua conta',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const RegisterScreen(),
                         ),
-                      ),
-                      child: Text(
-                        'Crie sua conta',
-                        style: GoogleFonts.syne(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
+                      );
+                    },
+                  ),
+                  SizedBox(height: height * 0.12),
+                  AuthLinkText(
+                    text: 'Já possui uma conta? ',
+                    linkText: 'Entrar',
+                    linkColor: AppColors.primary,
+                    onLinkTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const LoginScreen(),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 70),
-                  GestureDetector(
-                    onTap: () {},
-                    child: RichText(
-                      text: TextSpan(
-                        text: 'Já possui uma conta? ',
-                        style: GoogleFonts.dmSans(fontSize: 18, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
-                        children: [
-                          TextSpan(text: 'Entrar',
-                            style: TextStyle(fontSize: 18, color: AppColors.primary,
-                              fontWeight: FontWeight.w800),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => const LoginScreen(),
-                                  ),
-                                );
-                              },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 70),
+                  SizedBox(height: height * 0.08),
                   Row(children: [
                     const Expanded(
-                        child: Divider(
-                          color: AppColors.textPrimary,
-                          thickness: 2,
-                        ),
-                      ),                    
-                      Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text('ou conecte-se com',
-                        style: GoogleFonts.dmSans(fontSize: 18, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+                      child: Divider(
+                        color: AppColors.textPrimary,
+                        thickness: 2,
+                      ),
                     ),
-                      const Expanded(
-                        child: Divider(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        'ou conecte-se com',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 18,
                           color: AppColors.textPrimary,
-                          thickness: 2,
+                          fontWeight: FontWeight.w600,
                         ),
-                      ),                  
-                    ]),
-                  const SizedBox(height: 70),
-                  // Botões sociais
+                      ),
+                    ),
+                    const Expanded(
+                      child: Divider(
+                        color: AppColors.textPrimary,
+                        thickness: 2,
+                      ),
+                    ),
+                  ]),
+                  SizedBox(height: height * 0.08),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -124,9 +101,9 @@ class SplashScreen extends StatelessWidget {
     );
   }
 
-
   Widget _socialBtn(IconData icon) => Container(
-    width: 44, height: 44,
+    width: 44,
+    height: 44,
     decoration: BoxDecoration(
       shape: BoxShape.circle,
       color: AppColors.surface,
