@@ -106,7 +106,7 @@ class SplashScreen extends StatelessWidget {
     height: 44,
     decoration: BoxDecoration(
       shape: BoxShape.circle,
-      color: AppColors.surface,
+      color: AppColors.secondary,
       border: Border.all(color: AppColors.secondary, width: 1.5),
     ),
     child: Center(
