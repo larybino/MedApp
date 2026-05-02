@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/features/user/screens/edit_user_screen.dart';
 import 'package:frontend/shared/widgets/index.dart';
 import 'package:frontend/shared/widgets/custom_floating_action_button.dart';
 
@@ -20,7 +21,12 @@ class UserProfileScreen extends StatelessWidget {
       floatingActionButton: CustomFloatingActionButton(
         icon: Icons.edit,
         tooltip: 'Editar Perfil',
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const EditUserScreen()),
+          );
+        },
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
