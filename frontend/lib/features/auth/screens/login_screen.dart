@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/features/auth/screens/forgot_password_screen.dart';
 import 'package:frontend/features/auth/screens/register_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
@@ -132,7 +133,27 @@ Widget build(BuildContext context) {
                       ],
                     ),
 
-                    SizedBox(height: height * 0.05),
+                    SizedBox(height: height * 0.03),
+                    Center(
+                      child: GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ForgotPasswordScreen(),
+                          ),
+                        ),
+                        child: Text(
+                          'Esqueci minha senha',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 13,
+                            color: AppColors.secondary,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: height * 0.03),
+
 
                     SizedBox(
                       width: double.infinity,
@@ -154,6 +175,7 @@ Widget build(BuildContext context) {
                       ),
                     ),
 
+                    
                     SizedBox(height: height * 0.05),
                     Center(
                       child: GestureDetector(
