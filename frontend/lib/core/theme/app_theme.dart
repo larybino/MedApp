@@ -34,7 +34,7 @@ class AppTheme {
 
     // SnackBar
     snackBarTheme: SnackBarThemeData(
-      backgroundColor: AppColors.secondary,
+      backgroundColor: AppColors.primary,
       contentTextStyle: GoogleFonts.dmSans(color: AppColors.white),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       behavior: SnackBarBehavior.floating,

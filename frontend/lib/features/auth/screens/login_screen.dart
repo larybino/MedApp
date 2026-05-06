@@ -1,12 +1,64 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/features/user/screens/user_profile_screen.dart';
 import 'package:frontend/shared/widgets/index.dart';
 import 'package:frontend/features/auth/screens/forgot_password_screen.dart';
 import 'package:frontend/features/auth/screens/register_screen.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
+import 'package:frontend/features/service/auth_service.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _authService = AuthService();
+  bool _isLoading = false;
+
+  Future<void> _login() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      _showError('Preencha todos os campos');
+      return;
+    }
+    setState(() => _isLoading = true);
+    try {
+      await _authService.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login bem-sucedido!')),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const UserProfileScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) _showError(e.toString());
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: AppColors.danger),
+    );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,41 +82,16 @@ class LoginScreen extends StatelessWidget {
                 const Spacer(),
                 AuthBottomContainer(
                   children: [
-                    const CustomTextField(
+                    CustomTextField(
                       label: 'Email',
                       keyboardType: TextInputType.emailAddress,
+                      controller: _emailController,
                     ),
                     SizedBox(height: height * 0.05),
-                    const CustomTextField(
+                    CustomTextField(
                       label: 'Senha',
                       obscureText: true,
-                    ),
-                    SizedBox(height: height * 0.05),
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: Checkbox(
-                            value: false,
-                            onChanged: (_) {},
-                            activeColor: AppColors.secondary,
-                            side: const BorderSide(color: AppColors.secondary),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Manter-se logado',
-                          style: GoogleFonts.dmSans(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.secondary,
-                          ),
-                        ),
-                      ],
+                      controller: _passwordController,
                     ),
                     SizedBox(height: height * 0.03),
                     AuthLinkText(
@@ -82,7 +109,8 @@ class LoginScreen extends StatelessWidget {
                     SizedBox(height: height * 0.03),
                     SecondaryButton(
                       label: 'Entrar',
-                      onPressed: () {},
+                      onPressed: _login,
+                      isLoading: _isLoading,
                     ),
                     SizedBox(height: height * 0.05),
                     AuthLinkText(
