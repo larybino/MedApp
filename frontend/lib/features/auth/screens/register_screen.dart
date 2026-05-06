@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/routing/routes.dart';
 import 'package:frontend/features/service/auth_service.dart';
-import 'package:frontend/features/user/screens/user_profile_screen.dart';
 import 'package:frontend/shared/widgets/index.dart';
-import 'package:frontend/features/auth/screens/login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -22,7 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _register() async {
     if(_emailController.text.isEmpty || _passwordController.text.isEmpty || _nameController.text.isEmpty || _confirmPasswordController.text.isEmpty) {
-      _showError('Preencha todos os campos');
+      ErrorMessage.show(context, 'Preencha todos os campos');
       return;
     }
     setState(() => _isLoading = true);
@@ -37,23 +35,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cadastro bem-sucedido!')),
       );
-      Navigator.pushReplacement(
+      Navigator.pushReplacementNamed(
         context,
-        MaterialPageRoute(builder: (_) => const UserProfileScreen()),
+        Routes.userProfile,
       );
       }
     } catch (e) {
-       if (mounted) _showError(e.toString());
+       if (mounted) ErrorMessage.show(context, e.toString());
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: AppColors.danger),
-    );
-  }
 
   @override
   void dispose() {
@@ -109,21 +102,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       obscureText: true,
                       controller: _confirmPasswordController,
                     ),
-                    SizedBox(height: height * 0.03),
+                    SizedBox(height: height * 0.02),
                     SecondaryButton(
                       label: 'Cadastrar',
                       onPressed: _register,
                       isLoading: _isLoading,
                     ),
-                    SizedBox(height: height * 0.05),
+                    SizedBox(height: height * 0.03),
                     AuthLinkText(
                       text: 'Já possui uma conta? ',
                       linkText: 'Entrar',
-                      onLinkTap: () => Navigator.push(
+                      onLinkTap: () => Navigator.pushReplacementNamed(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const LoginScreen(),
-                        ),
+                        Routes.login,
                       ),
                     ),
                   ],

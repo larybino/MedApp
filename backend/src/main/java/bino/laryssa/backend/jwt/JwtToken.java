@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @Data
 public class JwtToken {
     private String token;
+    private Long id;
 }

@@ -1,11 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/routing/routes.dart';
+import 'package:frontend/features/service/auth_service.dart';
 import 'package:frontend/shared/widgets/index.dart';
-import 'package:frontend/features/auth/screens/login_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 
-class ForgotPasswordScreen extends StatelessWidget {
+class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
+
+  @override
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+}
+
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final _emailController = TextEditingController();
+  final _authService = AuthService();
+  bool _isLoading = false;
+
+  Future<void> _forgotPassword() async {
+    if (_emailController.text.isEmpty) {
+      ErrorMessage.show(context, 'Preencha o campo de email');
+      return;
+    }
+    setState(() => _isLoading = true);
+    try {
+      await _authService.forgotPassword(_emailController.text.trim());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Código de redefinição enviado!')),
+        );
+        Navigator.pushReplacementNamed(
+            context,
+            Routes.resetPassword,
+          );  
+        }
+    } catch(e){
+      ErrorMessage.show(context, e.toString());
+    }finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,24 +78,24 @@ class ForgotPasswordScreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: height * 0.03),
-                    const CustomTextField(
+                    CustomTextField(
                       label: 'Email',
                       keyboardType: TextInputType.emailAddress,
+                      controller: _emailController,
                     ),
                     SizedBox(height: height * 0.03),
                     SecondaryButton(
                       label: 'Enviar',
-                      onPressed: () {},
+                      onPressed: _forgotPassword,
+                      isLoading: _isLoading,
                     ),
                     SizedBox(height: height * 0.02),
                     AuthLinkText(
                       text: 'Lembrou a senha? ',
                       linkText: 'Voltar ao login',
-                      onLinkTap: () => Navigator.push(
+                      onLinkTap: () => Navigator.pushReplacementNamed(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const LoginScreen(),
-                        ),
+                        Routes.login,
                       ),
                     ),
                   ],

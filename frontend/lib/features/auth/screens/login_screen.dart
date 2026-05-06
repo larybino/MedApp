@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/user/screens/user_profile_screen.dart';
 import 'package:frontend/shared/widgets/index.dart';
-import 'package:frontend/features/auth/screens/forgot_password_screen.dart';
-import 'package:frontend/features/auth/screens/register_screen.dart';
 import '../../../core/theme/app_colors.dart';
 import 'package:frontend/features/service/auth_service.dart';
+import '../../../core/routing/routes.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -35,9 +33,9 @@ class _LoginScreenState extends State<LoginScreen> {
           const SnackBar(content: Text('Login bem-sucedido!')),
         );
 
-        Navigator.pushReplacement(
+        Navigator.pushReplacementNamed(
           context,
-          MaterialPageRoute(builder: (_) => const UserProfileScreen()),
+          Routes.userProfile,
         );
       }
     } catch (e) {
@@ -99,11 +97,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       linkText: 'senha?',
                       centered: true,
                       fontSize: 16,
-                      onLinkTap: () => Navigator.push(
+                      onLinkTap: () => Navigator.pushReplacementNamed(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const ForgotPasswordScreen(),
-                        ),
+                        Routes.forgotPassword,
                       ),
                     ),
                     SizedBox(height: height * 0.03),
@@ -116,11 +112,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     AuthLinkText(
                       text: 'Não possui uma conta? ',
                       linkText: 'Cadastra-se',
-                      onLinkTap: () => Navigator.push(
+                      onLinkTap: () => Navigator.pushReplacementNamed(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const RegisterScreen(),
-                        ),
+                        Routes.register,
                       ),
                     ),
                   ],

@@ -38,9 +38,8 @@ public class JwtUserDetailsService implements UserDetailsService {
     }
 
     public JwtToken getTokenAuthenticated(String email) {
-        UserRole role = userRepository.findByEmailAndActiveTrue(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"))
-                .getRole();
-        return JwtUtils.createToken(email, role.name());
+        User user = userRepository.findByEmailAndActiveTrue(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
+        return JwtUtils.createToken(email, user.getRole().name(), user.getId());
     }
 }

@@ -12,8 +12,19 @@ class AuthService {
         ApiEndpoints.login,
         data: {'email': email, 'password': password},
       );
-      await SecureStorage.saveToken(response.data['token']);
+      final token = response.data['token'];
+      final userId = response.data['id'];
+      if (token == null) {
+        throw Exception('Token não recebido do servidor');
+      }
+      if (userId == null) {
+        throw Exception('ID do usuário não recebido do servidor');
+      }
+      await SecureStorage.saveToken(token);
+      await SecureStorage.saveUserId(userId);
+      print('Token e User ID salvos com sucesso: $token, $userId'); // Log para depuração
     } on DioException catch (e) {
+      print('Erro no login: ${e.response?.data}'); // Log para depuração
       throw _handleError(e);
     }
   }
