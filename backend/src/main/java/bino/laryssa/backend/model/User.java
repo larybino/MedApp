@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import bino.laryssa.backend.model.enums.Gender;
 import bino.laryssa.backend.model.enums.UserRole;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -32,7 +33,7 @@ public class User {
     private String email;
     @Column(nullable = false)
     private String password;
-    private String gender;
+    private Gender gender;
     private LocalDate birthDate;
     private String phone;
     private String association;
@@ -46,6 +47,8 @@ public class User {
     private List<User> members;
     @Column(nullable = false)
     private boolean active = true;
+    private String recoveryCode;
+    private LocalDateTime recoveryCodeExpiration;
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
     @Column(nullable = false)

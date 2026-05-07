@@ -15,5 +15,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByMasterId(Long masterId);
     Optional<User> findByIdAndMasterId(Long id, Long masterId);
     Optional<User> findByEmailAndActiveTrue(String email);
+    Optional<User> findByRecoveryCode(String recoveryCode);
 
 }

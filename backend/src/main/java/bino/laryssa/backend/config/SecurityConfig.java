@@ -49,6 +49,7 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
                     .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                     .requestMatchers(HttpMethod.POST, "/users/forgot-password").permitAll()
                     .requestMatchers(HttpMethod.POST, "/users/reset-password").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/users/change-password").permitAll()
                     .requestMatchers(DOCUMENTATION_OPENAPI).permitAll()
                     .anyRequest().authenticated())
             .addFilterBefore(

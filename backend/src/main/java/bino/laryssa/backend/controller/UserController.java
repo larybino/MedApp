@@ -12,7 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import bino.laryssa.backend.model.dto.ForogotPasswordRequest;
+import bino.laryssa.backend.model.dto.ForgotPasswordRequest;
+import bino.laryssa.backend.model.dto.ChangePasswordRequest;
 import bino.laryssa.backend.model.dto.RegisterRequest;
 import bino.laryssa.backend.model.dto.ResetPasswordRequest;
 import bino.laryssa.backend.model.dto.UpdateUserRequest;
@@ -49,7 +50,7 @@ public class UserController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForogotPasswordRequest request) {
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         userService.forgotPassword(request);
         return ResponseEntity.ok().build();
     }
@@ -57,6 +58,12 @@ public class UserController {
     @PostMapping("/reset-password")
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         userService.resetPassword(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        userService.changePassword(request.getEmail(), request.getOldPassword(), request.getNewPassword());
         return ResponseEntity.ok().build();
     }
 

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import bino.laryssa.backend.model.User;
+import bino.laryssa.backend.model.enums.Gender;
 import bino.laryssa.backend.model.enums.UserRole;
 import lombok.Data;
 
@@ -13,7 +14,7 @@ public class UserResponse {
     private String name;
     private String email;
     private LocalDate birthDate;
-    private String gender;
+    private Gender gender;
     private String phone;
     private String association;
     private String profilePicture;
