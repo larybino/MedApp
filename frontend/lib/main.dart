@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
-import 'features/auth/screens/splash_screen.dart';
+import 'core/routing/routes.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -15,7 +15,8 @@ class MyApp extends StatelessWidget {
       title: 'MedApp',
       theme: AppTheme.dark,
       debugShowCheckedModeBanner: false,
-      home: const SplashScreen(),
+      initialRoute: Routes.splash,
+      onGenerateRoute: Routes.generateRoute,
     );
   }
 }

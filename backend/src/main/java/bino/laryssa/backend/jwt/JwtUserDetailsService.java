@@ -1,7 +1,6 @@
 package bino.laryssa.backend.jwt;
 
 import bino.laryssa.backend.model.User;
-import bino.laryssa.backend.model.enums.UserRole;
 import bino.laryssa.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +22,6 @@ public class JwtUserDetailsService implements UserDetailsService {
     @Value("${jwt.expire-hours:24}")
     private long expireHours;
 
-    // Configura o JwtUtils com os valores do properties após injeção
     @PostConstruct
     public void init() {
         JwtUtils.configure(secret, expireHours);
