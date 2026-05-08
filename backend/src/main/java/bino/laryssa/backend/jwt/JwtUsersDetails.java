@@ -9,7 +9,7 @@ public class JwtUsersDetails extends org.springframework.security.core.userdetai
 
     public JwtUsersDetails(User user) {
         super(user.getEmail(), user.getPassword(),
-                AuthorityUtils.createAuthorityList(user.getRole().name()));
+                AuthorityUtils.createAuthorityList("ROLE_" + user.getRole().name()));
         this.user = user;
     }
 
