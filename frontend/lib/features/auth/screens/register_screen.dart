@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:frontend/core/routing/routes.dart';
 import 'package:frontend/features/service/auth_service.dart';
 import 'package:frontend/shared/widgets/index.dart';
@@ -35,10 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cadastro bem-sucedido!')),
       );
-      Navigator.pushReplacementNamed(
-        context,
-        Routes.userProfile,
-      );
+      context.go(Routes.userProfile);
       }
     } catch (e) {
        if (mounted) ErrorMessage.show(context, e.toString());
@@ -112,10 +110,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     AuthLinkText(
                       text: 'Já possui uma conta? ',
                       linkText: 'Entrar',
-                      onLinkTap: () => Navigator.pushReplacementNamed(
-                        context,
-                        Routes.login,
-                      ),
+                      onLinkTap: () => context.go(Routes.login),
                     ),
                   ],
                 ),

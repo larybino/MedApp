@@ -1,11 +1,11 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:frontend/core/routing/routes.dart';
 import 'package:frontend/core/storage/secure_storage.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/utils/input_utils.dart';
-import 'package:frontend/features/auth/screens/splash_screen.dart';
 import 'package:frontend/features/service/user_service.dart';
-import 'package:frontend/features/user/screens/user_profile_screen.dart';
 import 'package:frontend/shared/widgets/index.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -91,12 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     trailing: Icon(Icons.arrow_forward_ios),
                     iconColor: AppColors.secondary,
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const UserProfileScreen(),
-                        ),
-                      );
+                      context.go(Routes.userProfile);
                     },
                     textColor: AppColors.secondary,
                   ),
@@ -107,12 +102,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     trailing: Icon(Icons.arrow_forward_ios),
                     iconColor: AppColors.secondary,
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const UserProfileScreen(),
-                        ),
-                      );
+                      context.go(Routes.userProfile);
                     },
                     textColor: AppColors.secondary,
                   ),
@@ -150,12 +140,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     trailing: Icon(Icons.arrow_forward_ios),
                     iconColor: AppColors.secondary,
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SplashScreen(),
-                        ),
-                      );                    },
+                      context.go(Routes.splash);
+                    },
                     textColor: AppColors.secondary,
                   ),
                 ],

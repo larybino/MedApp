@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:frontend/features/auth/screens/forgot_password_screen.dart';
 import 'package:frontend/features/auth/screens/login_screen.dart';
 import 'package:frontend/features/auth/screens/register_screen.dart';
@@ -18,30 +19,44 @@ class Routes {
   static const String userProfile = '/user-profile';
   static const String editUser = '/edit-user';
 
-  static Route<dynamic> generateRoute(RouteSettings settings) {
-    switch (settings.name) {
-      case splash:
-        return MaterialPageRoute(builder: (_) => const SplashScreen());
-      case home:
-        return MaterialPageRoute(builder: (_) => const SettingsScreen());
-      case login:
-        return MaterialPageRoute(builder: (_) => const LoginScreen());
-      case register:
-        return MaterialPageRoute(builder: (_) => const RegisterScreen());
-      case forgotPassword:
-        return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
-      case resetPassword:
-        return MaterialPageRoute(builder: (_) => const ResetPasswordScreen());
-      case userProfile:
-        return MaterialPageRoute(builder: (_) => const UserProfileScreen());
-      case editUser:
-        return MaterialPageRoute(builder: (_) => const EditUserScreen());
-      default:
-        return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            body: Center(child: Text('Rota desconhecida: ${settings.name}')),
-          ),
-        );
-    }
-  }
+  static final GoRouter router = GoRouter(
+    initialLocation: splash,
+    routes: [
+      GoRoute(
+        path: splash,
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: home,
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: login,
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: register,
+        builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: resetPassword,
+        builder: (context, state) => const ResetPasswordScreen(),
+      ),
+      GoRoute(
+        path: userProfile,
+        builder: (context, state) => const UserProfileScreen(),
+      ),
+      GoRoute(
+        path: editUser,
+        builder: (context, state) => const EditUserScreen(),
+      ),
+    ],
+    errorBuilder: (context, state) => Scaffold(
+      body: Center(child: Text('Rota desconhecida: ${state.uri.path}')),
+    ),
+  );
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:frontend/core/routing/routes.dart';
 import 'package:frontend/features/service/auth_service.dart';
 import 'package:frontend/shared/widgets/index.dart';
@@ -39,10 +40,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Senha alterada com sucesso!')),
         );
-        Navigator.pushReplacementNamed(
-          context,
-          Routes.login,
-        );
+        context.go(Routes.login);
       }
     } catch (e) {
       if (mounted) ErrorMessage.show(context, e.toString());
@@ -127,10 +125,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     AuthLinkText(
                       text: 'Lembrou a senha? ',
                       linkText: 'Voltar ao login',
-                      onLinkTap: () => Navigator.pushReplacementNamed(
-                        context,
-                        Routes.login,
-                      ),
+                      onLinkTap: () => context.go(Routes.login),
                     ),
                   ],
                 ),

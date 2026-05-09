@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:frontend/core/routing/routes.dart';
 import 'package:frontend/features/service/auth_service.dart';
 import 'package:frontend/shared/widgets/index.dart';
@@ -29,10 +30,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Código de redefinição enviado!')),
         );
-        Navigator.pushReplacementNamed(
-            context,
-            Routes.resetPassword,
-          );  
+        context.go(Routes.resetPassword);
         }
     } catch(e){
       ErrorMessage.show(context, e.toString());
@@ -93,10 +91,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     AuthLinkText(
                       text: 'Lembrou a senha? ',
                       linkText: 'Voltar ao login',
-                      onLinkTap: () => Navigator.pushReplacementNamed(
-                        context,
-                        Routes.login,
-                      ),
+                      onLinkTap: () => context.go(Routes.login),
                     ),
                   ],
                 ),

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:go_router/go_router.dart';
 import 'package:frontend/core/routing/routes.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/storage/secure_storage.dart';
@@ -99,7 +100,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Alterações salvas com sucesso!')),
         );
-        Navigator.pushNamed(context, Routes.userProfile);
+        context.go(Routes.userProfile);
       }
     } catch (e) {
       if (mounted) {

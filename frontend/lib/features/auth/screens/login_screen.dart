@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:frontend/shared/widgets/index.dart';
 import '../../../core/theme/app_colors.dart';
 import 'package:frontend/features/service/auth_service.dart';
@@ -33,10 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SnackBar(content: Text('Login bem-sucedido!')),
         );
 
-        Navigator.pushReplacementNamed(
-          context,
-          Routes.home,
-        );
+        context.go(Routes.home);
       }
     } catch (e) {
       if (mounted) _showError(e.toString());
@@ -97,10 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       linkText: 'senha?',
                       centered: true,
                       fontSize: 16,
-                      onLinkTap: () => Navigator.pushReplacementNamed(
-                        context,
-                        Routes.forgotPassword,
-                      ),
+                      onLinkTap: () => context.go(Routes.forgotPassword),
                     ),
                     SizedBox(height: height * 0.03),
                     SecondaryButton(
@@ -112,10 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     AuthLinkText(
                       text: 'Não possui uma conta? ',
                       linkText: 'Cadastra-se',
-                      onLinkTap: () => Navigator.pushReplacementNamed(
-                        context,
-                        Routes.register,
-                      ),
+                      onLinkTap: () => context.go(Routes.register),
                     ),
                   ],
                 ),

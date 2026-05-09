@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:frontend/core/routing/routes.dart';
 import 'package:frontend/shared/widgets/index.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -31,10 +32,7 @@ class SplashScreen extends StatelessWidget {
                   PrimaryButton(
                     label: 'Crie sua conta',
                     onPressed: () {
-                      Navigator.pushReplacementNamed(
-                        context,
-                        Routes.register,
-                      );
+                      context.go(Routes.register);
                     },
                   ),
                   SizedBox(height: height * 0.12),
@@ -43,10 +41,7 @@ class SplashScreen extends StatelessWidget {
                     linkText: 'Entrar',
                     linkColor: AppColors.primary,
                     onLinkTap: () {
-                      Navigator.pushReplacementNamed(
-                        context,
-                        Routes.login,
-                      );
+                      context.go(Routes.login);
                     },
                   ),
                   SizedBox(height: height * 0.08),

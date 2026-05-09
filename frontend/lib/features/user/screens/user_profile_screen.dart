@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:frontend/core/routing/routes.dart';
 import 'package:frontend/core/storage/secure_storage.dart';
 import 'package:frontend/core/theme/app_colors.dart';
@@ -61,10 +62,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         icon: Icons.edit,
         tooltip: 'Editar Perfil',
         onPressed: () {
-          Navigator.pushNamed(
-            context,
-            Routes.editUser,
-          );
+          context.go(Routes.editUser);
         },
       ),
       body: _isLoading

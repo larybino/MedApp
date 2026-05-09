@@ -11,12 +11,11 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'MedApp',
       theme: AppTheme.dark,
       debugShowCheckedModeBanner: false,
-      initialRoute: Routes.splash,
-      onGenerateRoute: Routes.generateRoute,
+      routerConfig: Routes.router,
     );
   }
 }
