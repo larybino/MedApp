@@ -103,6 +103,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const Divider(height: 1, color: AppColors.lightGrey),
                   ListTile(
+                    leading: Icon(Icons.key),
+                    title: Text('Alterar senha'),
+                    trailing: Icon(Icons.arrow_forward_ios),
+                    iconColor: AppColors.secondary,
+                    onTap: () async {
+                      final updated = await context.push<bool>(Routes.changePassword);
+                      if (updated == true) {
+                        await context.read<UserProvider>().refreshUser();
+                      }
+                    },
+                    textColor: AppColors.secondary,
+                  ),
+                  const Divider(height: 1, color: AppColors.lightGrey),
+                  ListTile(
                     leading: Icon(Icons.notifications),
                     title: Text('Notificação'),
                     trailing: Icon(Icons.arrow_forward_ios),

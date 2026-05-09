@@ -19,5 +19,6 @@ class ApiEndpoints {
   static const String register = '/users/register';
   static const String forgotPassword = '/users/forgot-password';
   static const String resetPassword = '/users/reset-password';
+  static const String changePassword = '/users/change-password';
   static String userById(int id) => '/users/$id';
 }

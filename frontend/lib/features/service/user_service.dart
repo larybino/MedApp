@@ -27,6 +27,17 @@ class UserService {
     }
   }
 
+  Future<void> changePassword(Map<String, dynamic> data) async {
+    try {
+      await _dio.post(
+        ApiEndpoints.changePassword,
+        data: data,
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   String _handleError(DioException e) {
     if (e.response != null) {
       return e.response?.data['error']?.toString() ?? 'Erro desconhecido';

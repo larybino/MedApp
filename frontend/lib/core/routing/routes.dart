@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/features/user/screens/change_password_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/features/auth/screens/forgot_password_screen.dart';
 import 'package:frontend/features/auth/screens/login_screen.dart';
@@ -16,6 +17,7 @@ class Routes {
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
   static const String resetPassword = '/reset-password';
+  static const String changePassword = '/change-password';
   static const String userProfile = '/user-profile';
   static const String editUser = '/edit-user';
   static const String settings = '/settings';
@@ -27,10 +29,10 @@ class Routes {
         path: splash,
         builder: (context, state) => const SplashScreen(),
       ),
-      GoRoute(
-        path: home,
-        // builder: (context, state) => const HomeScreen(),
-      ),
+      // GoRoute(
+      //   path: home,
+      //   // builder: (context, state) => const HomeScreen(),
+      // ),
       GoRoute(
         path: settings,
         builder: (context, state) => const SettingsScreen(),
@@ -50,6 +52,10 @@ class Routes {
       GoRoute(
         path: resetPassword,
         builder: (context, state) => const ResetPasswordScreen(),
+      ),
+      GoRoute(
+        path: changePassword,
+        builder: (context, state) => const ChangePasswordScreen(),
       ),
       GoRoute(
         path: userProfile,
