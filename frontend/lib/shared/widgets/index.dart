@@ -3,6 +3,7 @@ export 'primary_button.dart';
 export 'secondary_button.dart';
 export 'custom_text_field.dart';
 export 'custom_floating_action_button.dart';
+export 'custom_drop_field_text.dart';
 export 'auth_bottom_container.dart';
 export 'auth_link_text.dart';
 export 'bottom_nav.dart';

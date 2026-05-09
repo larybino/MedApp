@@ -1,7 +1,9 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:frontend/core/routing/routes.dart';
 import 'package:frontend/core/storage/secure_storage.dart';
 import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/utils/input_utils.dart';
 import 'package:frontend/features/service/user_service.dart';
 import 'package:frontend/shared/widgets/index.dart';
 
@@ -17,6 +19,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   final _userService = UserService();
   Map<String, dynamic>? _userData;
   bool _isLoading = true;
+  Uint8List? _profileImageBytes;
 
   @override
   void initState() {
@@ -27,13 +30,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Future<void> _fetchUserData() async {
     try {
       final userId = await SecureStorage.getUserId();
-      print('User ID recuperado: $userId'); // Log para depuração
       if (userId == null) {
         throw Exception('Usuário não autenticado');
       }
       final userData = await _userService.getProfile(userId);
       setState(() {
         _userData = userData.toJson();
+        _profileImageBytes = InputUtils.decodeBase64Image(userData.profilePicture);
         _isLoading = false;
       });
     } catch (e) {
@@ -46,6 +49,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
+    final formattedBirthDate = InputUtils.formatBirthDateForDisplay(_userData?["birthDate"] as String?);
+    final formattedGender = InputUtils.genderLabelFromValue(_userData?["gender"] as String?);
 
     return Scaffold(
       appBar: AppBar(
@@ -75,7 +80,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       CircleAvatar(
                         radius: 44,
                         backgroundColor: AppColors.darkGrey,
-                        child: const Icon(Icons.person, size: 44, color: AppColors.white),
+                        backgroundImage: _profileImageBytes != null
+                            ? MemoryImage(_profileImageBytes!)
+                            : null,
+                        child: _profileImageBytes == null
+                            ? const Icon(Icons.person, size: 44, color: AppColors.white)
+                            : null,
                       ),
                       SizedBox(width: width * 0.05),
                       Expanded(
@@ -115,11 +125,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           children: [
                             InfoRow(icon: Icons.email, label: "Email", value: _userData?["email"] ?? ""),
                             const Divider(height: 32),
-                            InfoRow(icon: Icons.cake, label: "Data de Nascimento", value: _userData?["birthDate"] ?? ""),
+                            InfoRow(icon: Icons.cake, label: "Data de Nascimento", value: formattedBirthDate),
                             const Divider(height: 32),
-                            InfoRow(icon: Icons.phone, label: "Contato", value: _userData?["contact"] ?? ""),
+                            InfoRow(icon: Icons.phone, label: "Contato", value: _userData?["phone"] ?? ""),
                             const Divider(height: 32),
-                            InfoRow(icon: Icons.wc, label: "Gênero", value: _userData?["gender"] ?? ""),
+                            InfoRow(icon: Icons.wc, label: "Gênero", value: formattedGender),
                             const Divider(height: 32),
                             InfoRow(icon: Icons.health_and_safety, label: "Associação/Classe", value: _userData?["association"] ?? ""),
                           ],
@@ -137,4 +147,5 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       ),
     );
   }
+
 }

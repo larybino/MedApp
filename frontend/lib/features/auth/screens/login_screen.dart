@@ -35,7 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         Navigator.pushReplacementNamed(
           context,
-          Routes.userProfile,
+          Routes.home,
         );
       }
     } catch (e) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 
@@ -11,6 +12,7 @@ class CustomTextField extends StatelessWidget {
     this.controller,
     this.validator,
     this.onChanged,
+    this.inputFormatters,
   });
 
   final String label;
@@ -19,6 +21,7 @@ class CustomTextField extends StatelessWidget {
   final TextEditingController? controller;
   final String? Function(String?)? validator;
   final Function(String)? onChanged;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +42,7 @@ class CustomTextField extends StatelessWidget {
           keyboardType: keyboardType,
           obscureText: obscureText,
           onChanged: onChanged,
+          inputFormatters: inputFormatters,
           style: GoogleFonts.dmSans(color: AppColors.secondary),
           decoration: InputDecoration(
             filled: true,
