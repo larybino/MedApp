@@ -137,10 +137,13 @@ public class UserService {
     }
 
     @Transactional
-    public void changePassword(String email, String oldPassword, String newPassword) {
-        User user = userRepository.findByEmail(email)
+    public void changePassword(String oldPassword, String newPassword) {
+        Long currentUserId = getCurrentUserId();
+        if (currentUserId == null) {
+            throw new IllegalArgumentException("Usuário não autenticado");
+        }
+        User user = userRepository.findById(currentUserId)
             .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
-        assertCanAccessUser(user);
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new IllegalArgumentException("A senha antiga está incorreta.");
         }

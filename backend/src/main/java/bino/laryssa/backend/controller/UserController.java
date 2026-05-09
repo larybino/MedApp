@@ -68,7 +68,7 @@ public class UserController {
     @PostMapping("/change-password")
     @PreAuthorize("hasAnyRole('MASTER','MEMBER')")
     public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
-        userService.changePassword(request.getEmail(), request.getOldPassword(), request.getNewPassword());
+        userService.changePassword(request.getOldPassword(), request.getNewPassword());
         return ResponseEntity.ok().build();
     }
 
