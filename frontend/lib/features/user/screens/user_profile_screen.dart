@@ -2,11 +2,11 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/core/routing/routes.dart';
-import 'package:frontend/core/storage/secure_storage.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/utils/input_utils.dart';
-import 'package:frontend/features/service/user_service.dart';
+import 'package:frontend/core/state/user_provider.dart';
 import 'package:frontend/shared/widgets/index.dart';
+import 'package:provider/provider.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -17,41 +17,30 @@ class UserProfileScreen extends StatefulWidget {
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
-  final _userService = UserService();
-  Map<String, dynamic>? _userData;
-  bool _isLoading = true;
   Uint8List? _profileImageBytes;
 
   @override
   void initState() {
     super.initState();
-    _fetchUserData();
-  }
-
-  Future<void> _fetchUserData() async {
-    try {
-      final userId = await SecureStorage.getUserId();
-      if (userId == null) {
-        throw Exception('Usuário não autenticado');
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await context.read<UserProvider>().loadUser();
+      } catch (e) {
+        if (mounted) ErrorMessage.show(context, e.toString());
       }
-      final userData = await _userService.getProfile(userId);
-      setState(() {
-        _userData = userData.toJson();
-        _profileImageBytes = InputUtils.decodeBase64Image(userData.profilePicture);
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      ErrorMessage.show(context, e.toString());
-    }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
-    final formattedBirthDate = InputUtils.formatBirthDateForDisplay(_userData?["birthDate"] as String?);
-    final formattedGender = InputUtils.genderLabelFromValue(_userData?["gender"] as String?);
+    final userProvider = context.watch<UserProvider>();
+    final user = userProvider.user;
+    final isLoading = userProvider.isLoading;
+    final formattedBirthDate = InputUtils.formatBirthDateForDisplay(user?.birthDate);
+    final formattedGender = InputUtils.genderLabelFromValue(user?.gender);
+    _profileImageBytes = InputUtils.decodeBase64Image(user?.profilePicture);
 
     return Scaffold(
       appBar: AppBar(
@@ -61,11 +50,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       floatingActionButton: CustomFloatingActionButton(
         icon: Icons.edit,
         tooltip: 'Editar Perfil',
-        onPressed: () {
-          context.go(Routes.editUser);
+        onPressed: () async {
+          final updated = await context.push<bool>(Routes.editUser);
+
+          if (updated == true) {
+            await context.read<UserProvider>().refreshUser();
+          }
         },
       ),
-      body: _isLoading
+        body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -91,7 +84,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _userData?["name"] ?? "",
+                              user?.name ?? "",
                               style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: AppColors.secondary),
                             ),
                             SizedBox(height: height * 0.01),
@@ -121,15 +114,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                         child: Column(
                           children: [
-                            InfoRow(icon: Icons.email, label: "Email", value: _userData?["email"] ?? ""),
+                            InfoRow(icon: Icons.email, label: "Email", value: user?.email ?? ""),
                             const Divider(height: 32),
                             InfoRow(icon: Icons.cake, label: "Data de Nascimento", value: formattedBirthDate),
                             const Divider(height: 32),
-                            InfoRow(icon: Icons.phone, label: "Contato", value: _userData?["phone"] ?? ""),
+                            InfoRow(icon: Icons.phone, label: "Contato", value: user?.phone ?? ""),
                             const Divider(height: 32),
                             InfoRow(icon: Icons.wc, label: "Gênero", value: formattedGender),
                             const Divider(height: 32),
-                            InfoRow(icon: Icons.health_and_safety, label: "Associação/Classe", value: _userData?["association"] ?? ""),
+                            InfoRow(icon: Icons.health_and_safety, label: "Associação/Classe", value: user?.association ?? ""),
                           ],
                         ),
                       ),
@@ -139,10 +132,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ],
               ),
             ),
-      bottomNavigationBar: BottomNav(
-        currentIndex: 4,
-        onTap: (index) {},
-      ),
     );
   }
 

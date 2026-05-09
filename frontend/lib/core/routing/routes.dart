@@ -18,6 +18,7 @@ class Routes {
   static const String resetPassword = '/reset-password';
   static const String userProfile = '/user-profile';
   static const String editUser = '/edit-user';
+  static const String settings = '/settings';
 
   static final GoRouter router = GoRouter(
     initialLocation: splash,
@@ -28,6 +29,10 @@ class Routes {
       ),
       GoRoute(
         path: home,
+        // builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: settings,
         builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(

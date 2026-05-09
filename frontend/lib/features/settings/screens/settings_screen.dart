@@ -1,12 +1,13 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:frontend/core/routing/bottom_nav_handler.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/core/routing/routes.dart';
-import 'package:frontend/core/storage/secure_storage.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/utils/input_utils.dart';
-import 'package:frontend/features/service/user_service.dart';
+import 'package:frontend/core/state/user_provider.dart';
 import 'package:frontend/shared/widgets/index.dart';
+import 'package:provider/provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -16,33 +17,18 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final _userService = UserService();
-  Map<String, dynamic>? _userData;
   Uint8List? _profileImageBytes;
-  bool _isLoading = true;
 
    @override
   void initState() {
     super.initState();
-    _fetchUserData();
-  }
-
-  Future<void> _fetchUserData() async {
-    try {
-      final userId = await SecureStorage.getUserId();
-      if (userId == null) {
-        throw Exception('Usuário não autenticado');
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await context.read<UserProvider>().loadUser();
+      } catch (e) {
+        if (mounted) ErrorMessage.show(context, e.toString());
       }
-      final userData = await _userService.getProfile(userId);
-      setState(() {
-        _userData = userData.toJson();
-        _profileImageBytes = InputUtils.decodeBase64Image(userData.profilePicture);
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      ErrorMessage.show(context, e.toString());
-    }
+    });
   }
   
   
@@ -50,6 +36,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
+    final userProvider = context.watch<UserProvider>();
+    final user = userProvider.user;
+    _profileImageBytes = InputUtils.decodeBase64Image(user?.profilePicture);
 
     return Scaffold(
       appBar: AppBar(
@@ -75,7 +64,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 SizedBox(width: width * 0.05),
                 Text(
-                  _userData?["name"] ?? "",
+                  user?.name ?? "",
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: AppColors.secondary),
                 ),
               ],
@@ -90,8 +79,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: Text('Dados do perfil'),
                     trailing: Icon(Icons.arrow_forward_ios),
                     iconColor: AppColors.secondary,
-                    onTap: () {
-                      context.go(Routes.userProfile);
+                    onTap: () async {
+                      final updated = await context.push<bool>(Routes.userProfile);
+                      if (updated == true) {
+                        await context.read<UserProvider>().refreshUser();
+                      }
                     },
                     textColor: AppColors.secondary,
                   ),
@@ -101,8 +93,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: Text('Gerenciar perfis'),
                     trailing: Icon(Icons.arrow_forward_ios),
                     iconColor: AppColors.secondary,
-                    onTap: () {
-                      context.go(Routes.userProfile);
+                    onTap: () async {
+                      final updated = await context.push<bool>(Routes.userProfile);
+                      if (updated == true) {
+                        await context.read<UserProvider>().refreshUser();
+                      }
                     },
                     textColor: AppColors.secondary,
                   ),
@@ -152,9 +147,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       bottomNavigationBar: BottomNav(
         currentIndex: 4,
-        onTap: (index) {
-          // Implementar navegação
-        },
+        onTap: (index) => BottomNavHandler.navigate(context, index),
       ),
     );
   }

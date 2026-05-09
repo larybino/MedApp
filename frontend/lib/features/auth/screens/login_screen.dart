@@ -34,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SnackBar(content: Text('Login bem-sucedido!')),
         );
 
-        context.go(Routes.home);
+        context.go(Routes.settings);
       }
     } catch (e) {
       if (mounted) _showError(e.toString());

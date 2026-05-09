@@ -1,15 +1,14 @@
 import 'dart:convert';
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
-import 'package:frontend/core/routing/routes.dart';
 import 'package:frontend/core/theme/app_colors.dart';
-import 'package:frontend/core/storage/secure_storage.dart';
 import 'package:frontend/core/utils/input_utils.dart';
+import 'package:frontend/core/state/user_provider.dart';
 import 'package:frontend/features/service/user_service.dart';
 import 'package:frontend/shared/widgets/index.dart';
+import 'package:provider/provider.dart';
 
 class EditUserScreen extends StatefulWidget {
   const EditUserScreen({super.key});
@@ -43,13 +42,13 @@ class _EditUserScreenState extends State<EditUserScreen> {
 
   Future<void> _loadUserData() async {
     try {
-      final userId = await SecureStorage.getUserId();
-      if (userId == null) {
+      final userProvider = context.read<UserProvider>();
+      await userProvider.loadUser();
+      final userData = userProvider.user;
+      if (userData == null) {
         throw Exception('Usuário não autenticado');
       }
-      setState(() => _userId = userId);
-      
-      final userData = await _userService.getProfile(userId);
+      setState(() => _userId = userData.id);
       setState(() {
         _nameController.text = userData.name;
         _emailController.text = userData.email;
@@ -97,10 +96,11 @@ class _EditUserScreenState extends State<EditUserScreen> {
         },
       );
       if (mounted) {
+        await context.read<UserProvider>().refreshUser();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Alterações salvas com sucesso!')),
         );
-        context.go(Routes.userProfile);
+        context.pop(true);
       }
     } catch (e) {
       if (mounted) {
@@ -263,12 +263,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
             ),
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNav(
-        currentIndex: 4,
-        onTap: (index) {
-          // Implementar navegação
-        },
       ),
     );
   }
