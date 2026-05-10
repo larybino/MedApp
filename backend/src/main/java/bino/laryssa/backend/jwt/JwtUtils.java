@@ -50,7 +50,7 @@ public class JwtUtils {
                 .signWith(generateKey())
                 .compact();
 
-        return new JwtToken(token, userId);
+        return new JwtToken(token, userId, role);
     }
 
     private static Claims getClaimsFromToken(String token) {

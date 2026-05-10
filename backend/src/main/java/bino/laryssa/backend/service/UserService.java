@@ -22,6 +22,7 @@ import bino.laryssa.backend.model.dto.ResetPasswordRequest;
 import bino.laryssa.backend.model.dto.UpdateUserRequest;
 import bino.laryssa.backend.model.dto.UserResponse;
 import bino.laryssa.backend.model.enums.Gender;
+import bino.laryssa.backend.model.enums.UserRole;
 import bino.laryssa.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -89,6 +90,7 @@ public class UserService {
         member.setName(request.getName());
         member.setEmail(request.getEmail());
         member.setPassword(passwordEncoder.encode(request.getPassword()));
+        member.setRole(UserRole.MEMBER);
         member.setMaster(master);
         member = userRepository.save(member);
         return UserResponse.toResponse(member);
