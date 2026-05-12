@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:frontend/core/routing/bottom_nav_handler.dart';
+import 'package:frontend/core/state/member_provider.dart';
+import 'package:frontend/features/service/auth_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/core/routing/routes.dart';
 import 'package:frontend/core/theme/app_colors.dart';
@@ -88,19 +90,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     textColor: AppColors.secondary,
                   ),
                   const Divider(height: 1, color: AppColors.lightGrey),
-                  ListTile(
-                    leading: Icon(Icons.person_pin_sharp),
-                    title: Text('Gerenciar perfis'),
-                    trailing: Icon(Icons.arrow_forward_ios),
-                    iconColor: AppColors.secondary,
-                    onTap: () async {
-                      final updated = await context.push<bool>(Routes.userProfile);
-                      if (updated == true) {
-                        await context.read<UserProvider>().refreshUser();
-                      }
-                    },
-                    textColor: AppColors.secondary,
-                  ),
+                  if(userProvider.isMaster)
+                    ListTile(
+                      leading: Icon(Icons.person_pin_sharp),
+                      title: Text('Gerenciar perfis'),
+                      trailing: Icon(Icons.arrow_forward_ios),
+                      iconColor: AppColors.secondary,
+                      onTap: () async {
+                        final updated = await context.push<bool>(Routes.members);
+                        if (updated == true) {
+                          await context.read<MemberProvider>().loadMembers();
+                        }
+                      },
+                      textColor: AppColors.secondary,
+                    ),
                   const Divider(height: 1, color: AppColors.lightGrey),
                   ListTile(
                     leading: Icon(Icons.key),
@@ -148,10 +151,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: Text('Sair'),
                     trailing: Icon(Icons.arrow_forward_ios),
                     iconColor: AppColors.secondary,
-                    onTap: () {
-                      context.go(Routes.splash);
+                    onTap: () async {
+                      context.read<UserProvider>().clearUser();
+                      await AuthService().logout();
+                      if (mounted) context.go(Routes.splash);
                     },
-                    textColor: AppColors.secondary,
                   ),
                 ],
               ),

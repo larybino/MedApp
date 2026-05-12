@@ -21,4 +21,6 @@ class ApiEndpoints {
   static const String resetPassword = '/users/reset-password';
   static const String changePassword = '/users/change-password';
   static String userById(int id) => '/users/$id';
+  static String members(int masterId) => '/users/$masterId/members';
+  static String memberById(int masterId, int memberId) => '/users/$masterId/members/$memberId';
 }

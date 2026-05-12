@@ -14,6 +14,9 @@ class UserProvider extends ChangeNotifier {
   UserModel? get user => _user;
   bool get isLoading => _isLoading;
 
+  bool get isMaster => user?.role == 'MASTER';
+  bool get isMember => user?.role == 'MEMBER';
+
   Future<void> loadUser({bool force = false}) async {
     if (_user != null && !force) {
       return;

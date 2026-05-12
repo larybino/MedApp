@@ -14,6 +14,7 @@ class AuthService {
       );
       final token = response.data['token'];
       final userId = response.data['id'];
+      final role = response.data['role'];
       if (token == null) {
         throw Exception('Token não recebido do servidor');
       }
@@ -22,9 +23,8 @@ class AuthService {
       }
       await SecureStorage.saveToken(token);
       await SecureStorage.saveUserId(userId);
-      print('Token e User ID salvos com sucesso: $token, $userId'); // Log para depuração
+      await SecureStorage.saveRole(role); 
     } on DioException catch (e) {
-      print('Erro no login: ${e.response?.data}'); // Log para depuração
       throw _handleError(e);
     }
   }
@@ -42,6 +42,7 @@ class AuthService {
         },
       );
       await SecureStorage.saveUserId(response.data['id']);
+      await SecureStorage.saveRole(response.data['role']);
     } on DioException catch (e) {
       throw _handleError(e);
     }

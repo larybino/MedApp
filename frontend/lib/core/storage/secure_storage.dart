@@ -22,6 +22,12 @@ class SecureStorage {
     return value != null ? int.tryParse(value) : null;
   }
 
+  static Future<void> saveRole(String role) =>
+      _storage.write(key: 'user_role', value: role);
+
+  static Future<String?> getRole() =>
+      _storage.read(key: 'user_role');
+
   static Future<void> clear() => _storage.deleteAll();
 
   static Future<bool> isLoggedIn() async {

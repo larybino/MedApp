@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/features/members/screens/create_members_screen.dart';
+import 'package:frontend/features/members/screens/members_screen.dart';
 import 'package:frontend/features/user/screens/change_password_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/features/auth/screens/forgot_password_screen.dart';
@@ -21,6 +23,8 @@ class Routes {
   static const String userProfile = '/user-profile';
   static const String editUser = '/edit-user';
   static const String settings = '/settings';
+  static const String members = '/members';
+  static const String createMember = '/members/create';
 
   static final GoRouter router = GoRouter(
     initialLocation: splash,
@@ -65,6 +69,14 @@ class Routes {
         path: editUser,
         builder: (context, state) => const EditUserScreen(),
       ),
+      GoRoute(
+        path: members,
+        builder: (context, state) => const MembersScreen(),
+      ),
+      GoRoute(
+        path: createMember,
+        builder: (context, state) => const CreateMemberScreen(),
+      )
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(child: Text('Rota desconhecida: ${state.uri.path}')),
