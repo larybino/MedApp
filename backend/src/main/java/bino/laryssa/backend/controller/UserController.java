@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import bino.laryssa.backend.model.dto.ForgotPasswordRequest;
+import bino.laryssa.backend.jwt.JwtToken;
+import bino.laryssa.backend.jwt.JwtUserDetailsService;
 import bino.laryssa.backend.model.dto.ChangePasswordRequest;
 import bino.laryssa.backend.model.dto.CreateMemberRequest;
 import bino.laryssa.backend.model.dto.RegisterRequest;
@@ -29,10 +31,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final JwtUserDetailsService jwtUserDetailsService;
+
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
-        return ResponseEntity.status(201).body(userService.register(request));
+    public ResponseEntity<JwtToken> register(@Valid @RequestBody RegisterRequest request) {
+        UserResponse user = userService.register(request);
+        JwtToken token = jwtUserDetailsService.getTokenAuthenticated(user.getEmail());
+        return ResponseEntity.status(201).body(token);
     }
 
     @GetMapping("/{id}")

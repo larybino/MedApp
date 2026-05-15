@@ -15,6 +15,7 @@ import org.thymeleaf.context.Context;
 import bino.laryssa.backend.jwt.JwtUsersDetails;
 import bino.laryssa.backend.exception.NotFoundException;
 import bino.laryssa.backend.model.User;
+import bino.laryssa.backend.model.UserRelationship;
 import bino.laryssa.backend.model.dto.CreateMemberRequest;
 import bino.laryssa.backend.model.dto.ForgotPasswordRequest;
 import bino.laryssa.backend.model.dto.RegisterRequest;
@@ -23,6 +24,7 @@ import bino.laryssa.backend.model.dto.UpdateUserRequest;
 import bino.laryssa.backend.model.dto.UserResponse;
 import bino.laryssa.backend.model.enums.Gender;
 import bino.laryssa.backend.model.enums.UserRole;
+import bino.laryssa.backend.repository.UserRelationshipRepository;
 import bino.laryssa.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final UserRelationshipRepository userRelationshipRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
 
@@ -79,37 +82,56 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public UserResponse createMember(Long masterId, CreateMemberRequest request) {
+   public UserResponse createMember(Long masterId, CreateMemberRequest request) {
         assertCurrentUserIsMaster(masterId);
-        if(userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email já cadastrado");
-        }
         User master = userRepository.findById(masterId)
-                .orElseThrow(() -> new NotFoundException("Mestre não encontrado"));
-        User member = new User();
-        member.setName(request.getName());
-        member.setEmail(request.getEmail());
-        member.setPassword(passwordEncoder.encode(request.getPassword()));
-        member.setRole(UserRole.MEMBER);
-        member.setMaster(master);
-        member = userRepository.save(member);
+                .orElseThrow(() -> new NotFoundException("Master não encontrado"));
+        User member;
+        if ("LINK".equals(request.getMode())) {
+            if (request.getMemberCode() == null || request.getMemberCode().isBlank())
+                throw new IllegalArgumentException("Informe o código do membro");
+            member = userRepository
+                    .findByMemberCodeAndActiveTrue(request.getMemberCode())
+                    .orElseThrow(() -> new NotFoundException("Código inválido ou não encontrado"));
+        } else {
+            if (request.getName() == null || request.getName().isBlank())
+                throw new IllegalArgumentException("Nome é obrigatório");
+            if (request.getEmail() != null && !request.getEmail().isBlank()) {
+                if (userRepository.existsByEmail(request.getEmail()))
+                    throw new IllegalArgumentException("Email já cadastrado");
+            }
+            member = new User();
+            member.setName(request.getName());
+            member.setRole(UserRole.MEMBER);
+            if (request.getEmail() != null && !request.getEmail().isBlank())
+                member.setEmail(request.getEmail());
+            if (request.getPassword() != null && !request.getPassword().isBlank())
+                member.setPassword(passwordEncoder.encode(request.getPassword()));
+            member = userRepository.save(member);
+        }
+
+        if (userRelationshipRepository.existsByMaster_IdAndMember_Id(
+                masterId, member.getId()))
+            throw new IllegalArgumentException("Membro já vinculado a este master");
+
+        UserRelationship relationship = new UserRelationship();
+        relationship.setMaster(master);
+        relationship.setMember(member);
+        userRelationshipRepository.save(relationship);
+
         return UserResponse.toResponse(member);
     }
 
     public List<UserResponse> getMembersByMasterId(Long masterId) {
         assertCurrentUserIsMaster(masterId);
-        return userRepository.findByMasterId(masterId)
-                .stream()
-                .map(UserResponse::toResponse)
-                .toList();
+        return userRelationshipRepository.findByMaster_Id(masterId).stream().map(rel -> UserResponse.toResponse(rel.getMember())).toList();
     }
 
     public void removeMember(Long masterId, Long memberId) {
         assertCurrentUserIsMaster(masterId);
-        User member = userRepository.findByIdAndMasterId(memberId, masterId)
-                .orElseThrow(() -> new NotFoundException("Membro não encontrado ou não pertence ao mestre"));
-        member.setActive(false);
-        userRepository.save(member);
+        UserRelationship relationship = userRelationshipRepository.findByMaster_IdAndMember_Id(masterId, memberId)
+                .orElseThrow(() -> new NotFoundException("Membro não encontrado"));
+        userRelationshipRepository.delete(relationship);
     }
 
     public void forgotPassword(ForgotPasswordRequest request) {
@@ -161,10 +183,8 @@ public class UserService {
         if (currentUserId.equals(targetUser.getId())) {
             return;
         }
-        User master = targetUser.getMaster();
-        if (master == null || !currentUserId.equals(master.getId())) {
-            throw new IllegalArgumentException("Acesso negado");
-        }
+        if (userRelationshipRepository.existsByMaster_IdAndMember_Id(currentUserId, targetUser.getId())) return;
+        throw new IllegalArgumentException("Acesso negado");
     }
 
     private void assertCurrentUserIsMaster(Long masterId) {

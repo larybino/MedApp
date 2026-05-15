@@ -6,11 +6,11 @@ import lombok.Data;
 
 @Data
 public class CreateMemberRequest {
-    @NotBlank(message = "O nome é obrigatório")
+    @NotBlank
+    private String mode;
     private String name;
-    @NotBlank(message = "O email é obrigatório")
     @Email(message = "O email deve ser válido")
     private String email;
-    @NotBlank(message = "A senha é obrigatória")
     private String password;
+    private String memberCode;
 }

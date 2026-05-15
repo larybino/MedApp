@@ -22,6 +22,7 @@ public class UserResponse {
     private Long masterId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String memberCode;
 
 
     public static UserResponse toResponse(User user) {
@@ -35,9 +36,9 @@ public class UserResponse {
         response.setAssociation(user.getAssociation());
         response.setProfilePicture(user.getProfilePicture());
         response.setRole(user.getRole());
-        response.setMasterId(user.getMaster() != null ? user.getMaster().getId() : null);
         response.setCreatedAt(user.getCreatedAt());
         response.setUpdatedAt(user.getUpdatedAt());
+        response.setMemberCode(user.getMemberCode());
         return response;
     }
 }
