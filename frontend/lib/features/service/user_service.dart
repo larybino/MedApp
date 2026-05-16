@@ -49,20 +49,29 @@ class UserService {
     }
   }
 
-  Future<void> createMember(int masterId, String name,
-      String email, String password) async {
-    try {
-      await _dio.post(
-        ApiEndpoints.members(masterId),
-        data: {
-          'name': name,
-          'email': email,
-          'password': password,
-        },
-      );
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
+  Future<void> createMember({
+      required int masterId,
+      required String mode,
+      String? name,
+      String? email,
+      String? password,
+      String? memberCode,
+    }) async {
+      try {
+        await _dio.post(
+          ApiEndpoints.members(masterId),
+          data: {
+            'mode': mode,
+            if (name != null && name.isNotEmpty) 'name': name,
+            if (email != null && email.isNotEmpty) 'email': email,
+            if (password != null && password.isNotEmpty) 'password': password,
+            if (memberCode != null && memberCode.isNotEmpty)
+              'memberCode': memberCode,
+          },
+        );
+      } on DioException catch (e) {
+        throw _handleError(e);
+      }
   }
 
   Future<void> removeMember(int masterId, int memberId) async {

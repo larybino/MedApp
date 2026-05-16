@@ -8,6 +8,7 @@ class UserModel {
   final String? association;
   final String? profilePicture;
   final String role;
+  final String? memberCode;
 
   UserModel({
     required this.id,
@@ -19,6 +20,7 @@ class UserModel {
     this.association,
     this.profilePicture,
     required this.role,
+    this.memberCode,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,7 @@ class UserModel {
       association: json['association'],
       profilePicture: json['profilePicture'],
       role: json['role'],
+      memberCode: json['memberCode'],
     );
   }
 
@@ -46,6 +49,7 @@ class UserModel {
       'association': association,
       'profilePicture': profilePicture,
       'role': role,
+      'memberCode': memberCode,
     };
   }
 }

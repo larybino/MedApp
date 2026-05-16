@@ -27,19 +27,32 @@ class MemberProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> createMember(String name, String email, String password) async {
-    final masterId = await SecureStorage.getUserId();
-    if (masterId == null) return;
+  Future<void> createMember({
+      required String mode,
+      String? name,
+      String? email,
+      String? password,
+      String? memberCode,
+    }) async {
+      final masterId = await SecureStorage.getUserId();
+      if (masterId == null) return;
 
-    await _service.createMember(masterId, name, email, password);
-    await loadMembers(); // recarrega a lista
-  }
+      await _service.createMember(
+        masterId: masterId,
+        mode: mode,
+        name: name,
+        email: email,
+        password: password,
+        memberCode: memberCode,
+      );
+      await loadMembers();
+    }
 
   Future<void> removeMember(int memberId) async {
     final masterId = await SecureStorage.getUserId();
     if (masterId == null) return;
 
     await _service.removeMember(masterId, memberId);
-    await loadMembers(); // recarrega a lista
+    await loadMembers(); 
   }
 }

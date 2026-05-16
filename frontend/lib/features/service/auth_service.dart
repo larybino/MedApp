@@ -30,7 +30,7 @@ class AuthService {
   }
 
   Future<void> register(String name, String email,
-      String password, String confirmPassword) async {
+    String password, String confirmPassword) async {
     try {
       final response = await _dio.post(
         ApiEndpoints.register,
@@ -41,12 +41,22 @@ class AuthService {
           'confirmPassword': confirmPassword,
         },
       );
-      await SecureStorage.saveUserId(response.data['id']);
-      await SecureStorage.saveRole(response.data['role']);
+      final token = response.data['token'];
+      final userId = response.data['id'];
+      final role = response.data['role'];
+      if (token == null) {
+        throw Exception('Token não recebido do servidor');
+      }
+      if (userId == null) {
+        throw Exception('ID do usuário não recebido do servidor');
+      }
+      await SecureStorage.saveToken(token);
+      await SecureStorage.saveUserId(userId);
+      await SecureStorage.saveRole(role);
     } on DioException catch (e) {
       throw _handleError(e);
     }
-  }
+}
 
   Future<void> forgotPassword(String email) async {
     try {

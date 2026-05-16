@@ -36,7 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cadastro bem-sucedido!')),
       );
-      context.go(Routes.userProfile);
+      context.go(Routes.settings);
       }
     } catch (e) {
        if (mounted) ErrorMessage.show(context, e.toString());

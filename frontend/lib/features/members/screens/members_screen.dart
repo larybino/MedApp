@@ -33,10 +33,7 @@ class _MembersScreenState extends State<MembersScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Remover',
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text('Remover', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -65,81 +62,103 @@ class _MembersScreenState extends State<MembersScreen> {
     final provider = context.watch<MemberProvider>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gerenciar Perfis'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Gerenciar Perfis'), centerTitle: true),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : provider.members.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.group_off,
+                    size: 64,
+                    color: AppColors.secondary.withOpacity(0.4),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Nenhum membro cadastrado',
+                    style: TextStyle(
+                      color: AppColors.secondary.withOpacity(0.6),
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.all(20),
+              itemCount: provider.members.length,
+              separatorBuilder: (_, __) =>
+                  const Divider(height: 1, color: AppColors.lightGrey),
+              itemBuilder: (context, index) {
+                final member = provider.members[index];
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  leading: CircleAvatar(
+                    backgroundColor: AppColors.primary.withOpacity(0.15),
+                    child: Text(
+                      member.name[0].toUpperCase(),
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                    member.name,
+                    style: const TextStyle(
+                      color: AppColors.secondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.group_off,
-                          size: 64, color: AppColors.secondary.withOpacity(0.4)),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Nenhum membro cadastrado',
-                        style: TextStyle(
-                          color: AppColors.secondary.withOpacity(0.6),
-                          fontSize: 16,
+                      if (member.email != null && member.email!.isNotEmpty)
+                        Text(
+                          member.email!,
+                          style: TextStyle(
+                            color: AppColors.secondary.withOpacity(0.6),
+                            fontSize: 12,
+                          ),
                         ),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.qr_code,
+                            size: 12,
+                            color: AppColors.secondary.withOpacity(0.5),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            member.memberCode ?? '',
+                            style: TextStyle(
+                              color: AppColors.secondary.withOpacity(0.5),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: provider.members.length,
-                  separatorBuilder: (_, __) =>
-                      const Divider(height: 1, color: AppColors.lightGrey),
-                  itemBuilder: (context, index) {
-                    final member = provider.members[index];
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      leading: CircleAvatar(
-                        backgroundColor: AppColors.primary.withOpacity(0.15),
-                        child: Text(
-                          member.name[0].toUpperCase(),
-                          style: const TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      title: Text(
-                        member.name,
-                        style: const TextStyle(
-                          color: AppColors.secondary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      subtitle: Text(
-                        member.email ?? '',
-                        style: TextStyle(
-                          color: AppColors.secondary.withOpacity(0.6),
-                          fontSize: 12,
-                        ),
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline,
-                            color: Colors.red),
-                        onPressed: () =>
-                            _confirmRemove(member.id, member.name),
-                      ),
-                    );
-                  },
-                ),
+
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    onPressed: () => _confirmRemove(member.id, member.name),
+                  ),
+                );
+              },
+            ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         onPressed: () async {
           final created = await Navigator.push<bool>(
             context,
-            MaterialPageRoute(
-              builder: (_) => const CreateMemberScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const CreateMemberScreen()),
           );
           if (created == true && mounted) {
             context.read<MemberProvider>().loadMembers();
