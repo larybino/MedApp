@@ -1,0 +1,77 @@
+package bino.laryssa.backend.model;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+import bino.laryssa.backend.model.enums.DoseInterval;
+import bino.laryssa.backend.model.enums.TreatmentStatus;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import lombok.Data;
+
+@Data
+@Entity
+@Table(name = "medications")
+public class Medication  {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @Column(nullable = false)
+    private String name;
+    @Column(nullable = false)
+    private String dosage;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private DoseInterval doseInterval;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TreatmentStatus treatmentStatus;
+    @Column(columnDefinition = "LONGTEXT")
+    private String medicationImage;
+    private boolean acquisitionConfirmed = false;
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    private String activeIngredients;
+    private String administrationRoute;
+    private String pharmaceuticalForm;
+
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private LocalTime startTime;
+    private int treatmentDurationDays;
+
+    private int stockQuantity;
+    private int currentStock;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+            if (this.treatmentStatus == null) {
+                this.treatmentStatus = TreatmentStatus.ACTIVE;
+            }
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+}
