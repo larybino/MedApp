@@ -14,6 +14,7 @@ public class UserResponse {
     private String name;
     private String email;
     private LocalDate birthDate;
+    private double weight;
     private Gender gender;
     private String phone;
     private String association;
@@ -33,6 +34,7 @@ public class UserResponse {
         response.setBirthDate(user.getBirthDate());
         response.setGender(user.getGender());
         response.setPhone(user.getPhone());
+        response.setWeight(user.getWeight());
         response.setAssociation(user.getAssociation());
         response.setProfilePicture(user.getProfilePicture());
         response.setRole(user.getRole());

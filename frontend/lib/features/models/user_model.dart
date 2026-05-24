@@ -2,6 +2,7 @@ class UserModel {
   final int id;
   final String name;
   final String email;
+  final double? weight;
   final String? gender;
   final String? phone;
   final String? birthDate;
@@ -14,6 +15,7 @@ class UserModel {
     required this.id,
     required this.name,
     required this.email,
+    this.weight,
     this.gender,
     this.phone,
     this.birthDate,
@@ -28,6 +30,7 @@ class UserModel {
       id: json['id'],
       name: json['name'],
       email: json['email'],
+      weight: (json['weight'] as num?)?.toDouble(),
       gender: json['gender'],
       phone: json['phone'],
       birthDate: json['birthDate'],
@@ -43,6 +46,7 @@ class UserModel {
       'id': id,
       'name': name,
       'email': email,
+      'weight': weight,
       'gender': gender,
       'phone': phone,
       'birthDate': birthDate,

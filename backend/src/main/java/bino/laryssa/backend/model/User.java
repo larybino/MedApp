@@ -30,6 +30,7 @@ public class User {
     private String password;
     private Gender gender;
     private LocalDate birthDate;
+    private double weight;
     private String phone;
     private String association;
     @Column(columnDefinition = "LONGTEXT")

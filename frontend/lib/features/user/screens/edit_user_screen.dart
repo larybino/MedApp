@@ -23,6 +23,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
   final _birthDateController = TextEditingController();
   final _pictureProfileController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _weightController = TextEditingController();
   final _genderController = TextEditingController();
   final _associationController = TextEditingController();
   final _userService = UserService();
@@ -54,6 +55,9 @@ class _EditUserScreenState extends State<EditUserScreen> {
         _emailController.text = userData.email;
         _birthDateController.text = InputUtils.formatBirthDateForDisplay(userData.birthDate);
         _phoneController.text = userData.phone ?? '';
+        _weightController.text = userData.weight != null && userData.weight! > 0
+            ? userData.weight!.toString()
+            : '';
         _genderController.text = InputUtils.genderLabelFromValue(userData.gender);
         _associationController.text = userData.association ?? '';
         _pictureProfileController.text = userData.profilePicture ?? '';
@@ -83,6 +87,9 @@ class _EditUserScreenState extends State<EditUserScreen> {
     try {
       final normalizedBirthDate = InputUtils.normalizeBirthDate(_birthDateController.text);
       final genderValue = InputUtils.genderValueFromLabel(_genderController.text);
+      final weightValue = _weightController.text.trim().isNotEmpty
+          ? double.tryParse(_weightController.text.replaceAll(',', '.'))
+          : null;
       await _userService.updateProfile(
         _userId!,
         {
@@ -90,6 +97,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
           'name': _nameController.text,
           'email': _emailController.text,
           'birthDate': normalizedBirthDate,
+          if (weightValue != null) 'weight': weightValue,
           'phone': _phoneController.text,
           'gender': genderValue,
           'association': _associationController.text,
@@ -117,6 +125,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
     _emailController.dispose();
     _birthDateController.dispose();
     _phoneController.dispose();
+    _weightController.dispose();
     _genderController.dispose();
     _associationController.dispose();
     _pictureProfileController.dispose();
@@ -234,6 +243,12 @@ class _EditUserScreenState extends State<EditUserScreen> {
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
                   inputFormatters: [_phoneMask],
+                ),
+                SizedBox(height: height * 0.02),
+                CustomTextField(
+                  label: 'Peso (kg)',
+                  controller: _weightController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 ),
                 SizedBox(height: height * 0.02),
                 CustomDropdownField(

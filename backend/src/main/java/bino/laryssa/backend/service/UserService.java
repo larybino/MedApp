@@ -66,6 +66,7 @@ public class UserService {
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setBirthDate(request.getBirthDate());
+        user.setWeight(request.getWeight());
         user.setGender(Gender.valueOf(request.getGender()));
         user.setPhone(request.getPhone());
         user.setAssociation(request.getAssociation());
