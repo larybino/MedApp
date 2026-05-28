@@ -156,6 +156,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       await AuthService().logout();
                       if (mounted) context.go(Routes.splash);
                     },
+                    textColor: AppColors.secondary,
                   ),
                 ],
               ),

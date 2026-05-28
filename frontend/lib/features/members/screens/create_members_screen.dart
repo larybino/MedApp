@@ -169,7 +169,7 @@ class _CreateMemberScreenState extends State<CreateMemberScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Peça ao membro o código que aparece no perfil dele. Exemplo: MED-A1B2C3D4',
+                        'Peça ao membro o código que aparece no perfil dele.',
                         style: TextStyle(
                           color: AppColors.secondary,
                           fontSize: 13,

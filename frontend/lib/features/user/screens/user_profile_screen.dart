@@ -122,6 +122,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             const Divider(height: 32),
                             InfoRow(icon: Icons.wc, label: "Gênero", value: formattedGender),
                             const Divider(height: 32),
+                            InfoRow(icon: Icons.monitor_weight, label: "Peso", value: user?.weight != null ? "${user!.weight} kg" : ""),
+                            const Divider(height: 32),
                             InfoRow(icon: Icons.health_and_safety, label: "Associação/Classe", value: user?.association ?? ""),
                             if (user?.role == 'MEMBER')
                             InfoRow(
