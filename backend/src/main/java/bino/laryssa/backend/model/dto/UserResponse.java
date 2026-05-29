@@ -17,7 +17,6 @@ public class UserResponse {
     private double weight;
     private Gender gender;
     private String phone;
-    private String association;
     private String profilePicture;
     private UserRole role;
     private Long masterId;
@@ -35,7 +34,6 @@ public class UserResponse {
         response.setGender(user.getGender());
         response.setPhone(user.getPhone());
         response.setWeight(user.getWeight());
-        response.setAssociation(user.getAssociation());
         response.setProfilePicture(user.getProfilePicture());
         response.setRole(user.getRole());
         response.setCreatedAt(user.getCreatedAt());

@@ -8,6 +8,7 @@ import lombok.Data;
 public class CreateMemberRequest {
     @NotBlank
     private String mode;
+    @NotBlank(message = "O nome é obrigatório")
     private String name;
     @Email(message = "O email deve ser válido")
     private String email;

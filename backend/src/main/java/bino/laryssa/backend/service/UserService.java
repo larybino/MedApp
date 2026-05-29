@@ -69,7 +69,6 @@ public class UserService {
         user.setWeight(request.getWeight());
         user.setGender(Gender.valueOf(request.getGender()));
         user.setPhone(request.getPhone());
-        user.setAssociation(request.getAssociation());
         user.setProfilePicture(request.getProfilePicture());
         user = userRepository.save(user);
 
@@ -138,7 +137,8 @@ public class UserService {
     public void forgotPassword(ForgotPasswordRequest request) {
         User user = userRepository.findByEmailAndActiveTrue(request.getEmail())
                 .orElseThrow(() -> new NotFoundException("Email não encontrado"));
-        String recoveryCode = UUID.randomUUID().toString();
+        String recoveryCode = UUID.randomUUID()
+                .toString().substring(0, 8).toUpperCase();
         user.setRecoveryCode(recoveryCode);
         user.setRecoveryCodeExpiration(LocalDateTime.now().plusHours(1));
         userRepository.save(user);
