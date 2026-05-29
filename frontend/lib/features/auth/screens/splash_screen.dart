@@ -21,6 +21,11 @@ class SplashScreen extends StatelessWidget {
               fit: BoxFit.cover,
             ),
           ),
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.35),
+            ),
+          ),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),

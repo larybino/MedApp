@@ -71,6 +71,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               fit: BoxFit.cover,
             ),
           ),
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.35),
+            ),
+          ),
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -107,12 +112,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     CustomTextField(
                       label: 'Nova senha',
                       obscureText: true,
+                      enableObscureToggle: true,
                       controller: _newPasswordController,
                     ),
                     SizedBox(height: height * 0.03),
                     CustomTextField(
                       label: 'Repita a nova senha',
                       obscureText: true,
+                      enableObscureToggle: true,
                       controller: _confirmPasswordController,
                     ),
                     SizedBox(height: height * 0.05),

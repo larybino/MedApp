@@ -58,6 +58,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               fit: BoxFit.cover,
             ),
           ),
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.35),
+            ),
+          ),
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,

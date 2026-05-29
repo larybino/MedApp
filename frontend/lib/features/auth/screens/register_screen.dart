@@ -68,6 +68,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               fit: BoxFit.cover,
             ),
           ),
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.35),
+            ),
+          ),
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -92,12 +97,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     CustomTextField(
                       label: 'Senha',
                       obscureText: true,
+                      enableObscureToggle: true,
                       controller: _passwordController,
                     ),
                     SizedBox(height: height * 0.02),
                     CustomTextField(
                       label: 'Confirmar senha',
                       obscureText: true,
+                      enableObscureToggle: true,
                       controller: _confirmPasswordController,
                     ),
                     SizedBox(height: height * 0.02),

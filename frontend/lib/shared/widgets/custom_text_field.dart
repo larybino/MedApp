@@ -3,12 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 
-class CustomTextField extends StatelessWidget {
+class CustomTextField extends StatefulWidget {
   const CustomTextField({
     super.key,
     required this.label,
     this.keyboardType = TextInputType.text,
     this.obscureText = false,
+    this.enableObscureToggle = false,
     this.controller,
     this.validator,
     this.onChanged,
@@ -18,10 +19,24 @@ class CustomTextField extends StatelessWidget {
   final String label;
   final TextInputType keyboardType;
   final bool obscureText;
+  final bool enableObscureToggle;
   final TextEditingController? controller;
   final String? Function(String?)? validator;
   final Function(String)? onChanged;
   final List<TextInputFormatter>? inputFormatters;
+
+  @override
+  State<CustomTextField> createState() => _CustomTextFieldState();
+}
+
+class _CustomTextFieldState extends State<CustomTextField> {
+  late bool _obscured;
+
+  @override
+  void initState() {
+    super.initState();
+    _obscured = widget.obscureText;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +44,7 @@ class CustomTextField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          widget.label,
           style: GoogleFonts.dmSans(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -38,11 +53,13 @@ class CustomTextField extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          obscureText: obscureText,
-          onChanged: onChanged,
-          inputFormatters: inputFormatters,
+          controller: widget.controller,
+          keyboardType: widget.keyboardType,
+          obscureText: widget.enableObscureToggle
+              ? _obscured
+              : widget.obscureText,
+          onChanged: widget.onChanged,
+          inputFormatters: widget.inputFormatters,
           style: GoogleFonts.dmSans(color: AppColors.secondary),
           decoration: InputDecoration(
             filled: true,
@@ -55,6 +72,17 @@ class CustomTextField extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppColors.danger, width: 1.5),
             ),
+            suffixIcon: widget.enableObscureToggle
+                ? IconButton(
+                    icon: Icon(
+                      _obscured ? Icons.visibility_off : Icons.visibility,
+                      color: AppColors.secondary,
+                    ),
+                    onPressed: () {
+                      setState(() => _obscured = !_obscured);
+                    },
+                  )
+                : null,
           ),
         ),
       ],

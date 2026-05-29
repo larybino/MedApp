@@ -69,6 +69,11 @@ class _LoginScreenState extends State<LoginScreen> {
               fit: BoxFit.cover,
             ),
           ),
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.35),
+            ),
+          ),
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -87,6 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     CustomTextField(
                       label: 'Senha',
                       obscureText: true,
+                      enableObscureToggle: true,
                       controller: _passwordController,
                     ),
                     SizedBox(height: height * 0.03),
