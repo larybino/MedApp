@@ -11,9 +11,8 @@ import bino.laryssa.backend.exception.NotFoundException;
 import bino.laryssa.backend.jwt.JwtUsersDetails;
 import bino.laryssa.backend.model.Medication;
 import bino.laryssa.backend.model.User;
-import bino.laryssa.backend.model.dto.CreateMedicationRequest;
+import bino.laryssa.backend.model.dto.MedicationRequest;
 import bino.laryssa.backend.model.dto.MedicationResponse;
-import bino.laryssa.backend.model.dto.UpdateMedicationRequest;
 import bino.laryssa.backend.model.enums.TreatmentStatus;
 import bino.laryssa.backend.repository.MedicationRepository;
 import bino.laryssa.backend.repository.UserRelationshipRepository;
@@ -27,7 +26,7 @@ public class MedicationService {
     private final UserRepository userRepository;
     private final UserRelationshipRepository userRelationshipRepository;
 
-    public MedicationResponse create(CreateMedicationRequest request) {
+    public MedicationResponse create(MedicationRequest request) {
         Long currentUserId = getCurrentUserId();
 
         Long targetUserId = request.getUserId() != null
@@ -47,11 +46,14 @@ public class MedicationService {
         medication.setPharmaceuticalForm(request.getPharmaceuticalForm());
         medication.setAdministrationRoute(request.getAdministrationRoute());
         medication.setStartDate(request.getStartDate());
+        medication.setEndDate(request.getEndDate());
         medication.setStartTime(request.getStartTime());
         medication.setTreatmentDurationDays(request.getTreatmentDurationDays());
         medication.setUser(targetUser);
 
-        if (request.getStartDate() != null && request.getTreatmentDurationDays() > 0) {
+        if (request.getEndDate() == null
+            && request.getStartDate() != null
+            && request.getTreatmentDurationDays() > 0) {
             medication.setEndDate(
                 request.getStartDate().plusDays(request.getTreatmentDurationDays()));
         }
@@ -83,28 +85,28 @@ public class MedicationService {
         return MedicationResponse.toResponse(medication);
     }
 
-    public MedicationResponse update(Long id, UpdateMedicationRequest request) {
+    public MedicationResponse update(Long id, MedicationRequest request) {
         Medication medication = medicationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Medicamento não encontrado"));
 
         assertCanAccessUser(medication.getUser().getId());
 
-        if (request.getName() != null) medication.setName(request.getName());
-        if (request.getDosage() != null) medication.setDosage(request.getDosage());
-        if (request.getDoseInterval() != null) medication.setDoseInterval(request.getDoseInterval());
-        if (request.getActiveIngredients() != null) medication.setActiveIngredients(request.getActiveIngredients());
-        if (request.getPharmaceuticalForm() != null) medication.setPharmaceuticalForm(request.getPharmaceuticalForm());
-        if (request.getAdministrationRoute() != null) medication.setAdministrationRoute(request.getAdministrationRoute());
-        if (request.getStartDate() != null) medication.setStartDate(request.getStartDate());
-        if (request.getStartTime() != null) medication.setStartTime(request.getStartTime());
-        if (request.getMedicationImage() != null) medication.setMedicationImage(request.getMedicationImage());
+        medication.setName(request.getName());
+        medication.setDosage(request.getDosage());
+        medication.setDoseInterval(request.getDoseInterval());
+        medication.setActiveIngredients(request.getActiveIngredients());
+        medication.setPharmaceuticalForm(request.getPharmaceuticalForm());
+        medication.setAdministrationRoute(request.getAdministrationRoute());
+        medication.setStartDate(request.getStartDate());
+        medication.setStartTime(request.getStartTime());
+        medication.setMedicationImage(request.getMedicationImage());
+        medication.setTreatmentDurationDays(request.getTreatmentDurationDays());
 
-        if (request.getTreatmentDurationDays() > 0) {
-            medication.setTreatmentDurationDays(request.getTreatmentDurationDays());
-            if (medication.getStartDate() != null) {
-                medication.setEndDate(
-                    medication.getStartDate().plusDays(request.getTreatmentDurationDays()));
-            }
+        if (request.getEndDate() != null) {
+            medication.setEndDate(request.getEndDate());
+        } else if (request.getStartDate() != null && request.getTreatmentDurationDays() > 0) {
+            medication.setEndDate(
+                request.getStartDate().plusDays(request.getTreatmentDurationDays()));
         }
 
         if (request.getStockQuantity() > 0) {
@@ -134,7 +136,6 @@ public class MedicationService {
         return MedicationResponse.toResponse(medicationRepository.save(medication));
     }
 
-    // ── DELETAR ──
     public void delete(Long id) {
         Medication medication = medicationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Medicamento não encontrado"));

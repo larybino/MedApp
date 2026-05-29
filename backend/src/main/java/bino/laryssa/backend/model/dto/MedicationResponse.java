@@ -21,9 +21,9 @@ public class MedicationResponse {
     private LocalDate startDate;
     private LocalTime startTime;
     private LocalDate endDate;
-    private Integer treatmentDurationDays;
-    private Integer stockQuantity;
-    private Integer currentStock;
+    private int treatmentDurationDays;
+    private int stockQuantity;
+    private int currentStock;
     private boolean acquisitionConfirmed;
     private String medicationImage;
     private TreatmentStatus treatmentStatus;

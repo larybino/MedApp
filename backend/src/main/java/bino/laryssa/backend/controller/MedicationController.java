@@ -13,9 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import bino.laryssa.backend.model.dto.CreateMedicationRequest;
+import bino.laryssa.backend.model.dto.MedicationRequest;
 import bino.laryssa.backend.model.dto.MedicationResponse;
-import bino.laryssa.backend.model.dto.UpdateMedicationRequest;
 import bino.laryssa.backend.service.MedicationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +26,7 @@ public class MedicationController {
     private final MedicationService medicationService;
 
     @PostMapping
-    public ResponseEntity<MedicationResponse> create(@Valid @RequestBody CreateMedicationRequest request) {
+    public ResponseEntity<MedicationResponse> create(@Valid @RequestBody MedicationRequest request) {
         return ResponseEntity.status(201).body(medicationService.create(request));
     }
 
@@ -37,7 +36,7 @@ public class MedicationController {
      }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MedicationResponse> update(@PathVariable Long id, @Valid @RequestBody UpdateMedicationRequest request) {
+    public ResponseEntity<MedicationResponse> update(@PathVariable Long id, @Valid @RequestBody MedicationRequest request) {
         return ResponseEntity.ok(medicationService.update(id, request));
      }
 

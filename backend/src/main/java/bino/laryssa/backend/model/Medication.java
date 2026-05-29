@@ -37,6 +37,7 @@ public class Medication  {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private TreatmentStatus treatmentStatus;
+
     @Column(columnDefinition = "LONGTEXT")
     private String medicationImage;
     private boolean acquisitionConfirmed = false;
