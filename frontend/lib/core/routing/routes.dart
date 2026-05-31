@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/features/medication/screens/create_medication_screen.dart';
+import 'package:frontend/features/medication/screens/medication_list_screen.dart';
 import 'package:frontend/features/members/screens/create_members_screen.dart';
 import 'package:frontend/features/members/screens/members_screen.dart';
 import 'package:frontend/features/user/screens/change_password_screen.dart';
@@ -25,6 +27,8 @@ class Routes {
   static const String settings = '/settings';
   static const String members = '/members';
   static const String createMember = '/members/create';
+  static const String medications = '/medications';
+  static const String createMedication = '/medications/create';
 
   static final GoRouter router = GoRouter(
     initialLocation: splash,
@@ -76,7 +80,15 @@ class Routes {
       GoRoute(
         path: createMember,
         builder: (context, state) => const CreateMemberScreen(),
-      )
+      ),
+      GoRoute(
+        path: medications,
+        builder: (context, state) => const MedicationListScreen(),
+      ),
+      GoRoute(
+        path: createMedication,
+        builder: (context, state) => const CreateMedicationScreen(),
+      ),
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(child: Text('Rota desconhecida: ${state.uri.path}')),

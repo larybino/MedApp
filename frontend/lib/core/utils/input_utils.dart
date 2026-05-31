@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/material.dart';
 
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
@@ -92,7 +93,7 @@ class InputUtils {
     return '$year-$month-$day';
   }
 
-    static Uint8List? decodeBase64Image(String? value) {
+  static Uint8List? decodeBase64Image(String? value) {
     if (value == null || value.trim().isEmpty) {
       return null;
     }
@@ -105,5 +106,28 @@ class InputUtils {
     } catch (_) {
       return null;
     }
+  }
+
+  static DateTime? parseIsoDate(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null;
+    }
+    return DateTime.tryParse(value);
+  }
+
+  static TimeOfDay? parseTime(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null;
+    }
+    final parts = value.split(':');
+    if (parts.length < 2) {
+      return null;
+    }
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) {
+      return null;
+    }
+    return TimeOfDay(hour: hour, minute: minute);
   }
 }

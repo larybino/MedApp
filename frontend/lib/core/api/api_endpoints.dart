@@ -23,4 +23,10 @@ class ApiEndpoints {
   static String userById(int id) => '/users/$id';
   static String members(int masterId) => '/users/$masterId/members';
   static String memberById(int masterId, int memberId) => '/users/$masterId/members/$memberId';
+  // Medicamentos
+static const String medications = '/medications';
+static String medicationById(int id) => '/medications/$id';
+static String confirmAcquisition(int id) => '/medications/$id/confirm-acquisition';
+static String endTreatment(int id) => '/medications/$id/end-treatment';
+static String medicationsByUser(int userId) => '/medications?userId=$userId';
 }
