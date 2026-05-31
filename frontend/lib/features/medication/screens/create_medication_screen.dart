@@ -334,7 +334,6 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
               SizedBox(height: height * 0.03),
             ],
 
-            // ── Formulários ──
             for (int i = 0; i < _forms.length; i++) ...[
               if (_forms.length > 1) ...[
                 Row(
