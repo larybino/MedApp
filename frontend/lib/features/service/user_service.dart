@@ -38,6 +38,14 @@ class UserService {
     }
   }
 
+  Future<void> deleteAccount(int userId) async {
+    try {
+      await _dio.delete(ApiEndpoints.userById(userId));
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   Future<List<UserModel>> getMembers(int masterId) async {
     try {
       final response = await _dio.get(ApiEndpoints.members(masterId));

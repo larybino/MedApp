@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/core/routing/bottom_nav_handler.dart';
 import 'package:frontend/core/state/member_provider.dart';
 import 'package:frontend/features/service/auth_service.dart';
+import 'package:frontend/features/service/user_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/core/routing/routes.dart';
 import 'package:frontend/core/theme/app_colors.dart';
@@ -20,6 +21,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   Uint8List? _profileImageBytes;
+  final _userService = UserService();
 
    @override
   void initState() {
@@ -41,6 +43,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final userProvider = context.watch<UserProvider>();
     final user = userProvider.user;
     _profileImageBytes = InputUtils.decodeBase64Image(user?.profilePicture);
+
+    Future<void> deleteAccount() async {
+      final userId = user?.id;
+      if (userId == null) {
+        ErrorMessage.show(context, 'Usuário não identificado');
+        return;
+      }
+
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Excluir conta'),
+          content: const Text('Essa ação é permanente. Deseja continuar?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Excluir', style: TextStyle(color: AppColors.danger)),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed != true || !mounted) {
+        return;
+      }
+
+      try {
+        await _userService.deleteAccount(userId);
+        if (!mounted) return;
+        context.read<UserProvider>().clearUser();
+        await AuthService().logout();
+        if (mounted) context.go(Routes.splash);
+      } catch (e) {
+        if (mounted) ErrorMessage.show(context, e.toString());
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -156,6 +198,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       await AuthService().logout();
                       if (mounted) context.go(Routes.splash);
                     },
+                    textColor: AppColors.secondary,
+                  ),
+                  const Divider(height: 1, color: AppColors.lightGrey),
+                  ListTile(
+                    leading: Icon(Icons.delete_outline, color: AppColors.secondary),
+                    title: Text('Excluir conta'),
+                    trailing: Icon(Icons.arrow_forward_ios),
+                    iconColor: AppColors.secondary,
+                    onTap: deleteAccount,
                     textColor: AppColors.secondary,
                   ),
                 ],
