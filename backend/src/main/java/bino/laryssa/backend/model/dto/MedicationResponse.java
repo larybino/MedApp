@@ -2,7 +2,7 @@ package bino.laryssa.backend.model.dto;
 
 import bino.laryssa.backend.model.Medication;
 import bino.laryssa.backend.model.enums.DoseInterval;
-import bino.laryssa.backend.model.enums.TreatmentStatus;
+import bino.laryssa.backend.model.enums.ScheduleStatus;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -18,15 +18,18 @@ public class MedicationResponse {
     private String activeIngredients;
     private String pharmaceuticalForm;
     private String administrationRoute;
-    private LocalDate startDate;
     private LocalTime startTime;
+
+    private Long scheduleId;
+    private LocalDate startDate;
     private LocalDate endDate;
     private int treatmentDurationDays;
+    private ScheduleStatus scheduleStatus;
+
     private int stockQuantity;
     private int currentStock;
     private boolean acquisitionConfirmed;
     private String medicationImage;
-    private TreatmentStatus treatmentStatus;
     private Long userId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -40,18 +43,23 @@ public class MedicationResponse {
         response.setActiveIngredients(med.getActiveIngredients());
         response.setPharmaceuticalForm(med.getPharmaceuticalForm());
         response.setAdministrationRoute(med.getAdministrationRoute());
-        response.setStartDate(med.getStartDate());
         response.setStartTime(med.getStartTime());
-        response.setEndDate(med.getEndDate());
-        response.setTreatmentDurationDays(med.getTreatmentDurationDays());
         response.setStockQuantity(med.getStockQuantity());
         response.setCurrentStock(med.getCurrentStock());
         response.setAcquisitionConfirmed(med.isAcquisitionConfirmed());
         response.setMedicationImage(med.getMedicationImage());
-        response.setTreatmentStatus(med.getTreatmentStatus());
         response.setUserId(med.getUser().getId());
         response.setCreatedAt(med.getCreatedAt());
         response.setUpdatedAt(med.getUpdatedAt());
+
+        
+        if (med.getSchedule() != null) {
+            response.setScheduleId(med.getSchedule().getId());
+            response.setStartDate(med.getSchedule().getStartDate());
+            response.setEndDate(med.getSchedule().getEndDate());
+            response.setTreatmentDurationDays(med.getSchedule().getTreatmentDurationDays());
+            response.setScheduleStatus(med.getSchedule().getScheduleStatus());
+        }
         return response;
     }
 }

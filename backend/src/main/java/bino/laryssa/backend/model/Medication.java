@@ -1,11 +1,10 @@
 package bino.laryssa.backend.model;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import bino.laryssa.backend.model.enums.DoseInterval;
-import bino.laryssa.backend.model.enums.TreatmentStatus;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -34,10 +34,7 @@ public class Medication  {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private DoseInterval doseInterval;
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private TreatmentStatus treatmentStatus;
-
+    
     @Column(columnDefinition = "LONGTEXT")
     private String medicationImage;
     private boolean acquisitionConfirmed = false;
@@ -53,10 +50,9 @@ public class Medication  {
     private String administrationRoute;
     private String pharmaceuticalForm;
 
-    private LocalDate startDate;
-    private LocalDate endDate;
+    @OneToOne(mappedBy = "medication", cascade = CascadeType.ALL)
+    private Schedule schedule;
     private LocalTime startTime;
-    private int treatmentDurationDays;
 
     private int stockQuantity;
     private int currentStock;
@@ -65,9 +61,6 @@ public class Medication  {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
-            if (this.treatmentStatus == null) {
-                this.treatmentStatus = TreatmentStatus.ACTIVE;
-            }
     }
     
     @PreUpdate

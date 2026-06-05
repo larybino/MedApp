@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 import bino.laryssa.backend.model.enums.DoseInterval;
-import bino.laryssa.backend.model.enums.TreatmentStatus;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -18,7 +17,6 @@ public class MedicationRequest {
     private String dosage;
     @NotNull(message = "O intervalo de dose e obrigatório")
     private DoseInterval doseInterval;
-    private TreatmentStatus treatmentStatus;
 
     private String activeIngredients;
     private String administrationRoute;
