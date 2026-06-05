@@ -1,19 +1,17 @@
 package bino.laryssa.backend.repository;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import bino.laryssa.backend.model.Medication;
-import bino.laryssa.backend.model.enums.TreatmentStatus;
+import bino.laryssa.backend.model.enums.ScheduleStatus;
 
 public interface MedicationRepository extends JpaRepository<Medication, Long> {
-    List<Medication> findByUserIdAndTreatmentStatusNot(Long userId, TreatmentStatus treatmentStatus);
-    List<Medication> findByUserIdAndTreatmentStatus(Long userId, TreatmentStatus treatmentStatus);
+    List<Medication> findByUserIdAndSchedule_ScheduleStatusNot(Long userId, ScheduleStatus scheduleStatus);
+    List<Medication> findByUserIdAndSchedule_ScheduleStatus(Long userId, ScheduleStatus scheduleStatus);
     Optional<Medication> findByIdAndUserId(Long id, Long userId);
-    List<Medication> findByStartDateAndTreatmentStatus(LocalDate startDate, TreatmentStatus treatmentStatus);
-    List<Medication> findByUserIdAndTreatmentStatusAndCurrentStockLessThanEqual(
-            Long userId, TreatmentStatus treatmentStatus, Integer currentStock);
+    List<Medication> findByUserIdAndCurrentStockLessThanEqual(Long userId, Integer currentStock);
+    List<Medication> findByUserIdAndScheduleIsNull(Long userId);
 }
