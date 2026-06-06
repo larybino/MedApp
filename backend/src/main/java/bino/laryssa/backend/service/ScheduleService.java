@@ -11,6 +11,8 @@ import bino.laryssa.backend.repository.ScheduleDoseRepository;
 import bino.laryssa.backend.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -146,4 +148,28 @@ public class ScheduleService {
                 date.isAfter(schedule.getEndDate())) return false;
         return true;
     }
+
+@Scheduled(fixedRate = 1800000)
+public void markMissedDoses() {
+    LocalDateTime now = LocalDateTime.now();
+
+    List<ScheduleDose> pendingDoses = scheduleDoseRepository.findByDoseStatus(DoseStatus.PENDING);
+
+    List<ScheduleDose> toMiss = pendingDoses.stream()
+            .filter(dose -> {
+                LocalDateTime scheduled = LocalDateTime.of(
+                        dose.getScheduledDate(),
+                        dose.getScheduledTime());
+                LocalDateTime windowEnd = scheduled.plusMinutes(
+                        dose.getConfirmationWindowMinutes());
+                return now.isAfter(windowEnd);
+            })
+            .toList();
+
+    if (!toMiss.isEmpty()) {
+        toMiss.forEach(dose -> dose.setDoseStatus(DoseStatus.MISSED));
+        scheduleDoseRepository.saveAll(toMiss);
+        log.info("{} doses marcadas como MISSED", toMiss.size());
+    }
+}
 }

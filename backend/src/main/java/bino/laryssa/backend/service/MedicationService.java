@@ -64,7 +64,7 @@ public class MedicationService {
     public List<MedicationResponse> listByUser(Long userId) {
         assertCanAccessUser(userId);
         return medicationRepository
-                .findByUserIdAndSchedule_ScheduleStatus(userId, ScheduleStatus.ACTIVE)
+                .findByUserIdAndSchedule_ScheduleStatusNot(userId, ScheduleStatus.CANCELLED)
                 .stream()
                 .map(MedicationResponse::toResponse)
                 .toList();

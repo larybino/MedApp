@@ -11,14 +11,10 @@ import bino.laryssa.backend.model.enums.DoseStatus;
 
 @Repository
 public interface ScheduleDoseRepository extends JpaRepository<ScheduleDose, Long> {
-    List<ScheduleDose> findBySchedule_Medication_UserIdAndScheduledDate(
-            Long userId, LocalDate date);
-    List<ScheduleDose> findBySchedule_IdAndScheduledDate(
-            Long scheduleId, LocalDate date);
-    List<ScheduleDose> findBySchedule_IdAndDoseStatus(
-            Long scheduleId, DoseStatus status);
-    boolean existsBySchedule_IdAndScheduledDate(
-            Long scheduleId, LocalDate date);
-    List<ScheduleDose> findBySchedule_Medication_UserIdAndScheduledDateLessThanEqualAndDoseStatus(
-            Long userId, LocalDate date, DoseStatus status);
+    List<ScheduleDose> findBySchedule_Medication_UserIdAndScheduledDate(Long userId, LocalDate date);
+    List<ScheduleDose> findBySchedule_IdAndScheduledDate(Long scheduleId, LocalDate date);
+    List<ScheduleDose> findBySchedule_IdAndDoseStatus(Long scheduleId, DoseStatus status);
+    boolean existsBySchedule_IdAndScheduledDate(Long scheduleId, LocalDate date);
+    List<ScheduleDose> findBySchedule_Medication_UserIdAndScheduledDateLessThanEqualAndDoseStatus(Long userId, LocalDate date, DoseStatus status);
+    List<ScheduleDose> findByDoseStatus(DoseStatus doseStatus);
 }
