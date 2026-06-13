@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -6,22 +5,21 @@ import '../../core/utils/input_utils.dart';
 import '../../core/theme/app_colors.dart';
 
 class ImagePickerCard extends StatelessWidget {
-  final File? image;
+  final Uint8List? imageBytes;
   final String? imageBase64;
   final VoidCallback onTap;
 
   const ImagePickerCard({
     super.key,
-    required this.image,
+    required this.imageBytes,
     required this.imageBase64,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bytes = image == null
-        ? InputUtils.decodeBase64Image(imageBase64)
-        : null;
+    final bytes = imageBytes ?? InputUtils.decodeBase64Image(imageBase64);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -33,19 +31,14 @@ class ImagePickerCard extends StatelessWidget {
             color: AppColors.primary.withValues(alpha: 0.4),
             width: 1.5,
           ),
-          image: image != null
+          image: bytes != null
               ? DecorationImage(
-                  image: FileImage(image!),
+                  image: MemoryImage(bytes),
                   fit: BoxFit.cover,
                 )
-              : (bytes != null
-                  ? DecorationImage(
-                      image: MemoryImage(bytes),
-                      fit: BoxFit.cover,
-                    )
-                  : null),
+              : null,
         ),
-        child: image == null && bytes == null
+        child: bytes == null
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -66,12 +59,11 @@ class ImagePickerCard extends StatelessWidget {
                 child: Container(
                   margin: const EdgeInsets.all(8),
                   padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppColors.primary,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.edit,
-                      size: 14, color: Colors.white),
+                  child: const Icon(Icons.edit, size: 14, color: Colors.white),
                 ),
               ),
       ),

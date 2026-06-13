@@ -13,23 +13,23 @@ class MedicationProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   List<MedicationModel> get activeMedications => _medications
-      .where((m) => m.treatmentStatus == 'ACTIVE')
+      .where((m) => m.scheduleStatus == 'ACTIVE')
       .toList();
 
   Future<void> loadMedications({int? userId}) async {
-    final targetId = userId ?? await SecureStorage.getUserId();
-    if (targetId == null) return;
+  final targetId = userId ?? await SecureStorage.getUserId();
+  if (targetId == null) return;
 
-    _isLoading = true;
+  _isLoading = true;
+  notifyListeners();
+
+  try {
+    _medications = await _service.getMedications(targetId);
+  } finally {
+    _isLoading = false;
     notifyListeners();
-
-    try {
-      _medications = await _service.getMedications(targetId);
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
   }
+}
 
   Future<void> createMedication(Map<String, dynamic> data) async {
     await _service.create(data);
@@ -42,7 +42,7 @@ class MedicationProvider extends ChangeNotifier {
       'name': existing.name,
       'dosage': existing.dosage,
       'doseInterval': existing.doseInterval,
-      'treatmentStatus': existing.treatmentStatus,
+      'scheduleStatus': existing.scheduleStatus,
       'medicationImage': existing.medicationImage,
       'activeIngredients': existing.activeIngredients,
       'administrationRoute': existing.administrationRoute,

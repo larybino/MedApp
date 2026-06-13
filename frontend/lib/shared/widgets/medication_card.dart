@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/features/models/medication_model.dart';
@@ -22,7 +24,7 @@ class MedicationCard extends StatelessWidget {
   });
 
   Color _statusColor() {
-    switch (medication.treatmentStatus) {
+    switch (medication.scheduleStatus) {
       case 'ACTIVE':
         return AppColors.primary;
       case 'PAUSED':
@@ -35,7 +37,7 @@ class MedicationCard extends StatelessWidget {
   }
 
   String _statusLabel() {
-    switch (medication.treatmentStatus) {
+    switch (medication.scheduleStatus) {
       case 'ACTIVE':
         return 'Ativo';
       case 'PAUSED':
@@ -77,20 +79,18 @@ class MedicationCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: medication.medicationImage != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.memory(
-                            Uri.parse(medication.medicationImage!)
-                                .data!
-                                .contentAsBytes(),
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      : const Icon(
-                          Icons.medication_rounded,
-                          color: AppColors.primary,
-                          size: 24,
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.memory(
+                          base64Decode(medication.medicationImage!),
+                          fit: BoxFit.cover,
                         ),
+                      )
+                    : const Icon(
+                        Icons.medication_rounded,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -168,7 +168,7 @@ class MedicationCard extends StatelessWidget {
               ],
             ),
             if (!medication.acquisitionConfirmed ||
-                medication.treatmentStatus == 'ACTIVE')
+                medication.scheduleStatus == 'ACTIVE')
               Padding(
                 padding: const EdgeInsets.only(top: 10),
                 child: Wrap(
@@ -196,7 +196,7 @@ class MedicationCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                    if (medication.treatmentStatus == 'ACTIVE')
+                    if (medication.scheduleStatus == 'ACTIVE')
                       TextButton.icon(
                         onPressed: onEndTreatment,
                         icon: const Icon(Icons.flag_outlined, size: 16),

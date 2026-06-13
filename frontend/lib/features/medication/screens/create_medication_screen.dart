@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:frontend/core/state/medication_provider.dart';
 import 'package:frontend/core/state/user_provider.dart';
@@ -31,10 +31,11 @@ class _MedicationFormData {
   final stockController = TextEditingController();
 
   String selectedInterval = 'EIGHT_HOURS';
+  String durationType = 'DAYS';
   DateTime? startDate;
   TimeOfDay? startTime;
   DateTime? endDate;
-  File? medicationImage;
+  Uint8List? medicationImageBytes;
   String? medicationImageBase64;
 
   void dispose() {
@@ -86,6 +87,14 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
     form.endDate = InputUtils.parseIsoDate(med.endDate);
     form.startTime = InputUtils.parseTime(med.startTime);
     form.medicationImageBase64 = med.medicationImage;
+
+    if (med.treatmentDurationDays != null && med.treatmentDurationDays! > 0) {
+      form.durationType = 'DAYS';
+    } else if (med.endDate != null && med.endDate!.isNotEmpty) {
+      form.durationType = 'DATE';
+    } else {
+      form.durationType = 'CONTINUOUS';
+    }
 
     _selectedTargetUserId = med.userId;
 
@@ -144,7 +153,7 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
     if (picked != null) {
       final bytes = await picked.readAsBytes();
       setState(() {
-        _forms[index].medicationImage = File(picked.path);
+        _forms[index].medicationImageBytes = bytes;
         _forms[index].medicationImageBase64 = base64Encode(bytes);
       });
     }
@@ -193,13 +202,13 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
         'medicationImage': form.medicationImageBase64,
       if (form.startDate != null)
         'startDate': form.startDate!.toIso8601String().substring(0, 10),
-      if (form.endDate != null)
+      if (form.durationType == 'DAYS' && form.durationController.text.isNotEmpty)
+        'treatmentDurationDays': int.tryParse(form.durationController.text),
+      if (form.durationType == 'DATE' && form.endDate != null)
         'endDate': form.endDate!.toIso8601String().substring(0, 10),
       if (form.startTime != null)
         'startTime':
             '${form.startTime!.hour.toString().padLeft(2, '0')}:${form.startTime!.minute.toString().padLeft(2, '0')}:00',
-      if (form.durationController.text.isNotEmpty)
-        'treatmentDurationDays': int.tryParse(form.durationController.text),
       if (form.stockController.text.isNotEmpty)
         'stockQuantity': int.tryParse(form.stockController.text),
       if (_selectedTargetUserId != null) 'userId': _selectedTargetUserId,
@@ -403,27 +412,45 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: height * 0.015),
-              DateTimeButton(
-                icon: Icons.event,
-                label: _forms[i].endDate != null
-                    ? 'Fim: ${_forms[i].endDate!.day.toString().padLeft(2, '0')}/${_forms[i].endDate!.month.toString().padLeft(2, '0')}/${_forms[i].endDate!.year}'
-                    : 'Data fim (opcional)',
-                onTap: () => _pickEndDate(i),
-              ),
-              SizedBox(height: height * 0.015),
-              CustomTextField(
-                label: 'Duração do tratamento (dias)',
-                controller: _forms[i].durationController,
-                keyboardType: TextInputType.number,
-              ),
+              SizedBox(height: height * 0.02),
+              SectionTitle(title: 'Término do tratamento'),
+                const SizedBox(height: 8),
+                DropdownField(
+                  value: _forms[i].durationType,
+                  items: const [
+                    DropdownMenuItem(value: 'DAYS', child: Text('Por quantidade de dias')),
+                    DropdownMenuItem(value: 'DATE', child: Text('Até uma data específica')),
+                    DropdownMenuItem(value: 'CONTINUOUS', child: Text('Uso contínuo (Sem data final)')),
+                  ],
+                  onChanged: (v) => setState(() => _forms[i].durationType = v as String),
+                ),
+                
+                if (_forms[i].durationType == 'DAYS') ...[
+                  SizedBox(height: height * 0.015),
+                  CustomTextField(
+                    label: 'Duração do tratamento (dias)',
+                    controller: _forms[i].durationController,
+                    keyboardType: TextInputType.number,
+                  ),
+                ],
+
+                if (_forms[i].durationType == 'DATE') ...[
+                  SizedBox(height: height * 0.015),
+                  DateTimeButton(
+                    icon: Icons.event,
+                    label: _forms[i].endDate != null
+                        ? 'Fim: ${_forms[i].endDate!.day.toString().padLeft(2, '0')}/${_forms[i].endDate!.month.toString().padLeft(2, '0')}/${_forms[i].endDate!.year}'
+                        : 'Selecionar data final',
+                    onTap: () => _pickEndDate(i),
+                  ),
+                ],
               SizedBox(height: height * 0.02),
 
               if (_showAdvanced) ...[
                 SectionTitle(title: 'Opções avançadas'),
                 const SizedBox(height: 8),
                 ImagePickerCard(
-                  image: _forms[i].medicationImage,
+                  imageBytes: _forms[i].medicationImageBytes,
                   imageBase64: _forms[i].medicationImageBase64,
                   onTap: () => _pickImage(i),
                 ),
