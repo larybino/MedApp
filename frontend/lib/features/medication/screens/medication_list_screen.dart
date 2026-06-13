@@ -111,7 +111,7 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    MemberChip(
+                    AppChip.selectable(
                       label: 'Eu',
                       isSelected: _selectedMemberId == null,
                       onTap: () {
@@ -122,7 +122,7 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
                     const SizedBox(width: 8),
                     ...memberProvider.members.map((m) => Padding(
                           padding: const EdgeInsets.only(right: 8),
-                          child: MemberChip(
+                          child: AppChip.selectable(
                             label: m.name,
                             isSelected: _selectedMemberId == m.id,
                             onTap: () {
@@ -147,12 +147,12 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
                             Icon(Icons.medication_outlined,
                                 size: 64,
                                 color:
-                                    AppColors.secondary.withOpacity(0.3)),
+                                    AppColors.secondary.withValues(alpha: 0.3)),
                             const SizedBox(height: 16),
                             Text(
                               'Nenhum medicamento cadastrado',
                               style: TextStyle(
-                                color: AppColors.secondary.withOpacity(0.6),
+                                color: AppColors.secondary.withValues(alpha: 0.6),
                                 fontSize: 16,
                               ),
                             ),

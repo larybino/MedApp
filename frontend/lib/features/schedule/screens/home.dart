@@ -158,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    MemberChip(
+                    AppChip.selectable(
                       label: 'Eu',
                       isSelected: _selectedMemberId == null,
                       onTap: () {
@@ -169,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 8),
                     ...memberProvider.members.map((m) => Padding(
                           padding: const EdgeInsets.only(right: 8),
-                          child: MemberChip(
+                          child: AppChip.selectable(
                             label: m.name,
                             isSelected: _selectedMemberId == m.id,
                             onTap: () {

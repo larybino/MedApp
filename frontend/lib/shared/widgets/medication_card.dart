@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/features/models/medication_model.dart';
-import 'package:frontend/shared/widgets/info_chip.dart';
+import 'package:frontend/shared/widgets/app_chip.dart';
 
 class MedicationCard extends StatelessWidget {
   final MedicationModel medication;
@@ -148,17 +148,17 @@ class MedicationCard extends StatelessWidget {
               spacing: 6,
               runSpacing: 6,
               children: [
-                InfoChip(
+                AppChip(
                   icon: Icons.access_time,
                   label: intervalLabel,
                 ),
-                InfoChip(
+                AppChip(
                   icon: Icons.circle,
                   label: _statusLabel(),
                   color: _statusColor(),
                 ),
                 if (medication.currentStock != null)
-                  InfoChip(
+                  AppChip(
                     icon: Icons.inventory_2_outlined,
                     label: 'Estoque: ${medication.currentStock}',
                     color: medication.currentStock! <= 5
