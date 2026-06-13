@@ -263,12 +263,6 @@ class _EditUserScreenState extends State<EditUserScreen> {
                     });
                   },
                 ),
-                SizedBox(height: height * 0.02),
-                CustomTextField(
-                  label: 'Classe/Associação',
-                  controller: _associationController,
-                  keyboardType: TextInputType.text,
-                ),
                 SizedBox(height: height * 0.04),
                 PrimaryButton(
                   label: 'Salvar Alterações',
