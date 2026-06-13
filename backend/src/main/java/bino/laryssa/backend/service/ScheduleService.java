@@ -38,10 +38,12 @@ public class ScheduleService {
         schedule.setStartDate(request.getStartDate());
         schedule.setTreatmentDurationDays(request.getTreatmentDurationDays());
 
-        if (request.getEndDate() != null) {
-            schedule.setEndDate(request.getEndDate());
-        } else if (request.getTreatmentDurationDays() > 0) {
+        if (request.getTreatmentDurationDays() > 0) {
             schedule.setEndDate(request.getStartDate().plusDays(request.getTreatmentDurationDays()));
+        } else if (request.getEndDate() != null) {
+            schedule.setEndDate(request.getEndDate());
+        } else {
+            schedule.setEndDate(null);
         }
 
         Schedule saved = scheduleRepository.save(schedule);
@@ -53,12 +55,19 @@ public class ScheduleService {
         schedule.setStartDate(request.getStartDate());
         schedule.setTreatmentDurationDays(request.getTreatmentDurationDays());
 
-        if (request.getEndDate() != null) {
-            schedule.setEndDate(request.getEndDate());
-        } else if (request.getTreatmentDurationDays() > 0) {
+        if (request.getTreatmentDurationDays() > 0) {
             schedule.setEndDate(request.getStartDate().plusDays(request.getTreatmentDurationDays()));
+        } else if (request.getEndDate() != null) {
+            schedule.setEndDate(request.getEndDate());
+        } else {
+            schedule.setEndDate(null);
         }
-        return scheduleRepository.save(schedule);
+
+        Schedule updatedSchedule = scheduleRepository.save(schedule);
+        clearPendingDoses(updatedSchedule);
+        generateDosesPerPeriod(updatedSchedule, LocalDate.now(), LocalDate.now().plusDays(7));
+
+        return updatedSchedule;
     }
 
     public void finish(Schedule schedule) {
@@ -73,7 +82,10 @@ public class ScheduleService {
     }
 
     public List<ScheduleDose> getDosesPerDay(Long userId, LocalDate date) {
-        return scheduleDoseRepository.findBySchedule_Medication_UserIdAndScheduledDate(userId, date);
+        return scheduleDoseRepository.findBySchedule_Medication_UserIdAndScheduledDate(userId, date)
+            .stream()
+            .filter(dose -> dose.getSchedule().getScheduleStatus() != ScheduleStatus.CANCELLED)
+            .toList();
     }
 
     public ScheduleDose confirmDose(Long doseId) {
@@ -87,39 +99,58 @@ public class ScheduleService {
     }
 
     private void generateDosesPerPeriod(Schedule schedule, LocalDate from, LocalDate to) {
-        LocalDate current = from;
-        while (!current.isAfter(to)) {
-            if (isDateInTreatment(schedule, current)) {
-                generateDosesPerDay(schedule, current);
+        if (schedule.getMedication() == null || schedule.getMedication().getStartTime() == null) {
+            return;
+        }
+
+        LocalDateTime currentDose = schedule.getStartDate().atTime(schedule.getMedication().getStartTime());
+        LocalDateTime treatmentEnd;
+
+        if (schedule.getTreatmentDurationDays() > 0) {
+            treatmentEnd = currentDose.plusDays(schedule.getTreatmentDurationDays());
+        } else if (schedule.getEndDate() != null) {
+            treatmentEnd = schedule.getEndDate().atTime(LocalTime.MAX);
+        } else {
+            treatmentEnd = to.atTime(LocalTime.MAX);
+        }
+
+        LocalDateTime windowEnd = to.atTime(LocalTime.MAX);
+        LocalDateTime limit = treatmentEnd.isBefore(windowEnd) ? treatmentEnd : windowEnd;
+
+        int intervalHours = getIntervalHours(schedule.getMedication());
+        List<ScheduleDose> dosesToSave = new ArrayList<>();
+
+        while (currentDose.isBefore(limit)) {
+            if (!currentDose.toLocalDate().isBefore(from)) {
+                LocalDate doseDate = currentDose.toLocalDate();
+                LocalTime doseTime = currentDose.toLocalTime();
+
+                if (!scheduleDoseRepository.existsBySchedule_IdAndScheduledDateAndScheduledTime(
+                        schedule.getId(), doseDate, doseTime)) {
+
+                    ScheduleDose dose = new ScheduleDose();
+                    dose.setSchedule(schedule);
+                    dose.setScheduledDate(doseDate);
+                    dose.setScheduledTime(doseTime);
+                    dosesToSave.add(dose);
+                }
             }
-            current = current.plusDays(1);
+            
+            if (intervalHours == 0) {
+                currentDose = currentDose.plusDays(1);
+            } else {
+                currentDose = currentDose.plusHours(intervalHours);
+            }
+        }
+
+        if (!dosesToSave.isEmpty()) {
+            scheduleDoseRepository.saveAll(dosesToSave);
         }
     }
 
-    private void generateDosesPerDay(Schedule schedule, LocalDate date) {
-        if (scheduleDoseRepository.existsBySchedule_IdAndScheduledDate(schedule.getId(), date)) return;
-
-        List<LocalTime> times = calculateDoseTimes(schedule.getMedication());
-
-        List<ScheduleDose> doses = times.stream().map(time -> {
-            ScheduleDose dose = new ScheduleDose();
-            dose.setSchedule(schedule);
-            dose.setScheduledDate(date);
-            dose.setScheduledTime(time);
-            return dose;
-        }).toList();
-
-        scheduleDoseRepository.saveAll(doses);
-    }
-
-    private List<LocalTime> calculateDoseTimes(Medication med) {
-        if (med.getStartTime() == null || med.getDoseInterval() == null)
-            return List.of();
-
-        LocalTime start = med.getStartTime();
-        List<LocalTime> times = new ArrayList<>();
-
-        int intervalHours = switch (med.getDoseInterval()) {
+    private int getIntervalHours(Medication med) {
+        if (med.getDoseInterval() == null) return 0;
+        return switch (med.getDoseInterval()) {
             case FOUR_HOURS -> 4;
             case SIX_HOURS -> 6;
             case EIGHT_HOURS -> 8;
@@ -127,49 +158,36 @@ public class ScheduleService {
             case TWENTY_FOUR_HOURS -> 24;
             default -> 0;
         };
+    }
 
-        if (intervalHours == 0) {
-            times.add(start);
-            return times;
+    private void clearPendingDoses(Schedule schedule) {
+        List<ScheduleDose> pendingDoses = scheduleDoseRepository.findBySchedule_IdAndDoseStatus(schedule.getId(), DoseStatus.PENDING);
+        
+        if (!pendingDoses.isEmpty()) {
+            scheduleDoseRepository.deleteAll(pendingDoses);
         }
-
-        LocalTime current = start;
-        do {
-            times.add(current);
-            current = current.plusHours(intervalHours);
-        } while (!current.equals(start) && times.size() < 24);
-
-        return times;
     }
 
-    private boolean isDateInTreatment(Schedule schedule, LocalDate date) {
-        if (date.isBefore(schedule.getStartDate())) return false;
-        if (schedule.getEndDate() != null &&
-                date.isAfter(schedule.getEndDate())) return false;
-        return true;
+    @Scheduled(fixedRate = 1800000)
+    public void markMissedDoses() {
+        LocalDateTime now = LocalDateTime.now();
+
+        List<ScheduleDose> pendingDoses = scheduleDoseRepository.findByDoseStatus(DoseStatus.PENDING);
+
+        List<ScheduleDose> toMiss = pendingDoses.stream()
+                .filter(dose -> {
+                    LocalDateTime scheduled = LocalDateTime.of(
+                            dose.getScheduledDate(),
+                            dose.getScheduledTime());
+                    LocalDateTime windowEnd = scheduled.plusMinutes(
+                            dose.getConfirmationWindowMinutes());
+                    return now.isAfter(windowEnd);
+                })
+                .toList();
+
+        if (!toMiss.isEmpty()) {
+            toMiss.forEach(dose -> dose.setDoseStatus(DoseStatus.MISSED));
+            scheduleDoseRepository.saveAll(toMiss);
+        }
     }
-
-@Scheduled(fixedRate = 1800000)
-public void markMissedDoses() {
-    LocalDateTime now = LocalDateTime.now();
-
-    List<ScheduleDose> pendingDoses = scheduleDoseRepository.findByDoseStatus(DoseStatus.PENDING);
-
-    List<ScheduleDose> toMiss = pendingDoses.stream()
-            .filter(dose -> {
-                LocalDateTime scheduled = LocalDateTime.of(
-                        dose.getScheduledDate(),
-                        dose.getScheduledTime());
-                LocalDateTime windowEnd = scheduled.plusMinutes(
-                        dose.getConfirmationWindowMinutes());
-                return now.isAfter(windowEnd);
-            })
-            .toList();
-
-    if (!toMiss.isEmpty()) {
-        toMiss.forEach(dose -> dose.setDoseStatus(DoseStatus.MISSED));
-        scheduleDoseRepository.saveAll(toMiss);
-        log.info("{} doses marcadas como MISSED", toMiss.size());
     }
-}
-}
