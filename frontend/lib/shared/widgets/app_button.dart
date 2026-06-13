@@ -2,24 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 
-class PrimaryButton extends StatelessWidget {
-  const PrimaryButton({
+enum ButtonVariant { primary, secondary }
+
+class AppButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+  final bool isLoading;
+  final ButtonVariant variant;
+
+  const AppButton({
     super.key,
     required this.label,
     required this.onPressed,
     this.isLoading = false,
-    this.backgroundColor = AppColors.primary,
-    this.foregroundColor = AppColors.secondary,
+    this.variant = ButtonVariant.primary,
   });
-
-  final String label;
-  final VoidCallback onPressed;
-  final bool isLoading;
-  final Color backgroundColor;
-  final Color foregroundColor;
 
   @override
   Widget build(BuildContext context) {
+    final isPrimary = variant == ButtonVariant.primary;
+    final backgroundColor = isPrimary ? AppColors.primary : AppColors.secondary;
+    final foregroundColor = isPrimary ? AppColors.secondary : AppColors.primary;
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -33,10 +37,13 @@ class PrimaryButton extends StatelessWidget {
           ),
         ),
         child: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(foregroundColor),
+                ),
               )
             : Text(
                 label,

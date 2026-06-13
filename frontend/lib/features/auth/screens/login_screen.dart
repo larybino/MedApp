@@ -104,9 +104,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       onLinkTap: () => context.go(Routes.forgotPassword),
                     ),
                     SizedBox(height: height * 0.03),
-                    SecondaryButton(
+                    AppButton(
                       label: 'Entrar',
                       onPressed: _login,
+                      variant: ButtonVariant.secondary,
                       isLoading: _isLoading,
                     ),
                     SizedBox(height: height * 0.05),

@@ -87,9 +87,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       controller: _emailController,
                     ),
                     SizedBox(height: height * 0.03),
-                    SecondaryButton(
+                    AppButton(
                       label: 'Enviar',
                       onPressed: _forgotPassword,
+                      variant: ButtonVariant.secondary,
                       isLoading: _isLoading,
                     ),
                     SizedBox(height: height * 0.02),

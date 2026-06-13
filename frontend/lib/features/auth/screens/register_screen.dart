@@ -108,9 +108,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       controller: _confirmPasswordController,
                     ),
                     SizedBox(height: height * 0.02),
-                    SecondaryButton(
+                    AppButton(
                       label: 'Cadastrar',
                       onPressed: _register,
+                      variant: ButtonVariant.secondary,
                       isLoading: _isLoading,
                     ),
                     SizedBox(height: height * 0.03),

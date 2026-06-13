@@ -187,7 +187,7 @@ class _CreateMemberScreenState extends State<CreateMemberScreen> {
               ),
             ],
             SizedBox(height: height * 0.04),
-            PrimaryButton(
+            AppButton(
               label: _isNewProfile ? 'Criar e vincular' : 'Vincular',
               onPressed: _create,
               isLoading: _isLoading,

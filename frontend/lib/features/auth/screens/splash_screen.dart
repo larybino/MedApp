@@ -34,7 +34,7 @@ class SplashScreen extends StatelessWidget {
                   SizedBox(height: height * 0.08),
                   const AuthHeader(title: ''),
                   const Spacer(),
-                  PrimaryButton(
+                  AppButton(
                     label: 'Crie sua conta',
                     onPressed: () {
                       context.go(Routes.register);

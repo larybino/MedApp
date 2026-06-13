@@ -152,7 +152,7 @@ class _ChangePasswordScreenState
 
                       const SizedBox(height: 32),
 
-                      PrimaryButton(
+                      AppButton(
                         label: 'Salvar Alterações',
                         onPressed: _changePassword,
                       ),

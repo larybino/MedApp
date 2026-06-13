@@ -123,9 +123,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       controller: _confirmPasswordController,
                     ),
                     SizedBox(height: height * 0.05),
-                    SecondaryButton(
+                    AppButton(
                       label: 'Alterar Senha',
                       onPressed: _resetPassword,
+                      variant: ButtonVariant.secondary,
                       isLoading: _isLoading,
                     ),
                     SizedBox(height: height * 0.02),

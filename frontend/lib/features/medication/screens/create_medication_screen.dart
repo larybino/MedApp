@@ -530,7 +530,7 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
               ),
               SizedBox(height: height * 0.02),
             ],
-            PrimaryButton(
+            AppButton(
               label: _isEdit ? 'Salvar' : 'Cadastrar',
               onPressed: _submit,
               isLoading: _isLoading,

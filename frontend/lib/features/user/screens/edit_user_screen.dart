@@ -264,7 +264,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
                   },
                 ),
                 SizedBox(height: height * 0.04),
-                PrimaryButton(
+                AppButton(
                   label: 'Salvar Alterações',
                   onPressed: _saveChanges,
                 ),
