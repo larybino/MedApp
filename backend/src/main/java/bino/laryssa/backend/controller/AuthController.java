@@ -2,7 +2,9 @@ package bino.laryssa.backend.controller;
 
 import bino.laryssa.backend.jwt.JwtToken;
 import bino.laryssa.backend.jwt.JwtUserDetailsService;
+import bino.laryssa.backend.model.User;
 import bino.laryssa.backend.model.dto.LoginRequest;
+import bino.laryssa.backend.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -21,15 +24,19 @@ public class AuthController {
 
     private final JwtUserDetailsService jwtUserDetailsService;
     private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
 
     @PostMapping("/login")
     public ResponseEntity<JwtToken> login(@Valid @RequestBody LoginRequest request,
-                                          HttpServletRequest httpRequest) {
+                                        HttpServletRequest httpRequest) {
         log.info("Tentativa de login: {}", request.getEmail());
         try {
+            User user = userRepository.findByEmailAndActiveTrue(request.getEmail())
+                    .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
+
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            request.getEmail(), request.getPassword()));
+                            String.valueOf(user.getId()), request.getPassword()));  // passa ID
         } catch (AuthenticationException ex) {
             log.warn("Credenciais inválidas para: {}", request.getEmail());
             return ResponseEntity.badRequest().build();

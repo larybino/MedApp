@@ -4,8 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,10 +15,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Slf4j
+@RequiredArgsConstructor
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtUserDetailsService detailsService;
+    private final JwtUserDetailsService detailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -40,13 +40,13 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String email = JwtUtils.getEmailFromToken(token);
-        toAuthentication(request, email);
+        String id = JwtUtils.getSubjectFromToken(token);
+        toAuthentication(request, id);
         filterChain.doFilter(request, response);
     }
 
-    private void toAuthentication(HttpServletRequest request, String email) {
-        UserDetails userDetails = detailsService.loadUserByUsername(email);
+    private void toAuthentication(HttpServletRequest request, String id) {
+        UserDetails userDetails = detailsService.loadUserByUsername(id);
         UsernamePasswordAuthenticationToken authToken =
                 UsernamePasswordAuthenticationToken
                         .authenticated(userDetails, null, userDetails.getAuthorities());

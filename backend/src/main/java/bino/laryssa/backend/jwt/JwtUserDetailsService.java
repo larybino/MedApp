@@ -28,19 +28,15 @@ public class JwtUserDetailsService implements UserDetailsService {
     }
 
     @Override
-    public JwtUsersDetails loadUserByUsername(String email) {
-        User user = userRepository.findByEmailAndActiveTrue(email)
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "Usuário não encontrado"));
-        if (user.getEmail() == null)
-            throw new UsernameNotFoundException(
-                    "Este perfil não possui acesso de login");
+    public JwtUsersDetails loadUserByUsername(String id) {
+        User user = userRepository.findById(Long.parseLong(id))
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
         return new JwtUsersDetails(user);
     }
 
     public JwtToken getTokenAuthenticated(String email) {
         User user = userRepository.findByEmailAndActiveTrue(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
-        return JwtUtils.createToken(email, user.getRole().name(), user.getId());
+        return JwtUtils.createToken(String.valueOf(user.getId()), user.getRole().name(), user.getId());
     }
 }

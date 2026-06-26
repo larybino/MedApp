@@ -1,5 +1,6 @@
 package bino.laryssa.backend.config;
 
+import bino.laryssa.backend.jwt.JwtUserDetailsService;
 import org.springframework.web.filter.CorsFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +28,7 @@ import bino.laryssa.backend.jwt.JwtAuthorizationFilter;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    private final JwtUserDetailsService jwtUserDetailsService;
     private static final String[] DOCUMENTATION_OPENAPI = {
             "/docs/index.html",
             "/docs-medd-app", "/docs-medd-app/**",
@@ -34,6 +36,10 @@ public class SecurityConfig {
             "/swagger-ui-custom.html", "/swagger-ui.html", "/swagger-ui/**",
             "/**.html", "/webjars/**", "/configuration/**", "/swagger-resources/**"
     };
+
+    SecurityConfig(JwtUserDetailsService jwtUserDetailsService) {
+        this.jwtUserDetailsService = jwtUserDetailsService;
+    }
 
     @Bean
 public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -61,7 +67,7 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
 
     @Bean
     public JwtAuthorizationFilter jwtAuthorizationFilter() {
-        return new JwtAuthorizationFilter();
+        return new JwtAuthorizationFilter(jwtUserDetailsService);
     }
     
     @Bean
