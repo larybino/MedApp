@@ -35,9 +35,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final date =
         '${_selectedDay.year}-${_selectedDay.month.toString().padLeft(2, '0')}-${_selectedDay.day.toString().padLeft(2, '0')}';
     await context.read<ScheduleProvider>().loadDosesByDate(
-          date,
-          userId: _selectedMemberId,
-        );
+      date,
+      userId: _selectedMemberId,
+    );
   }
 
   Future<void> _confirmDose(int doseId, String medicationName) async {
@@ -53,8 +53,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Confirmar',
-                style: TextStyle(color: AppColors.primary)),
+            child: Text(
+              'Confirmar',
+              style: TextStyle(color: AppColors.primary),
+            ),
           ),
         ],
       ),
@@ -64,16 +66,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       try {
         await context.read<ScheduleProvider>().confirmDose(doseId);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Dose confirmada!')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Dose confirmada!')));
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(e.toString()),
-                backgroundColor: Colors.red),
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
           );
         }
       }
@@ -85,12 +85,27 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   String _formatHeaderDate(DateTime date) {
     const weekdays = [
-      'Segunda', 'Terça', 'Quarta', 'Quinta',
-      'Sexta', 'Sábado', 'Domingo'
+      'Segunda',
+      'Terça',
+      'Quarta',
+      'Quinta',
+      'Sexta',
+      'Sábado',
+      'Domingo',
     ];
     const months = [
-      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+      'Jan',
+      'Fev',
+      'Mar',
+      'Abr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Set',
+      'Out',
+      'Nov',
+      'Dez',
     ];
     final weekday = weekdays[date.weekday - 1];
     final month = months[date.month - 1];
@@ -106,7 +121,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     return Scaffold(
       body: Column(
         children: [
-
           Container(
             decoration: BoxDecoration(
               color: AppColors.secondary,
@@ -120,7 +134,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   // Header com data selecionada
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
@@ -135,20 +148,22 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           ),
                         ),
                         const Spacer(),
-                        Icon(Icons.edit_outlined,
-                            color: AppColors.primary, size: 20),
+                        Icon(
+                          Icons.edit_outlined,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
                       ],
                     ),
                   ),
 
                   TableCalendar(
                     firstDay: DateTime.now().subtract(
-                        const Duration(days: 365)),
-                    lastDay: DateTime.now().add(
-                        const Duration(days: 365)),
+                      const Duration(days: 365),
+                    ),
+                    lastDay: DateTime.now().add(const Duration(days: 365)),
                     focusedDay: _focusedDay,
-                    selectedDayPredicate: (day) =>
-                        isSameDay(_selectedDay, day),
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                     onDaySelected: (selectedDay, focusedDay) {
                       setState(() {
                         _selectedDay = selectedDay;
@@ -176,27 +191,32 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         color: Colors.transparent,
                         shape: BoxShape.circle,
                         border: Border.all(
-                            color: AppColors.primary, width: 1.5),
+                          color: AppColors.primary,
+                          width: 1.5,
+                        ),
                       ),
                       todayTextStyle: const TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w700,
                       ),
                       // outros dias
-                      defaultTextStyle: const TextStyle(
-                          color: Colors.white70),
-                      weekendTextStyle: const TextStyle(
-                          color: Colors.white70),
+                      defaultTextStyle: const TextStyle(color: Colors.white70),
+                      weekendTextStyle: const TextStyle(color: Colors.white70),
                       outsideTextStyle: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.3)),
+                        color: Colors.white.withValues(alpha: 0.3),
+                      ),
                     ),
                     headerStyle: HeaderStyle(
                       formatButtonVisible: false,
                       titleCentered: false,
                       leftChevronIcon: const Icon(
-                          Icons.chevron_left, color: AppColors.primary),
+                        Icons.chevron_left,
+                        color: AppColors.primary,
+                      ),
                       rightChevronIcon: const Icon(
-                          Icons.chevron_right, color: AppColors.primary),
+                        Icons.chevron_right,
+                        color: AppColors.primary,
+                      ),
                       titleTextStyle: const TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w600,
@@ -205,9 +225,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     ),
                     daysOfWeekStyle: const DaysOfWeekStyle(
                       weekdayStyle: TextStyle(
-                          color: Colors.white60, fontSize: 12),
+                        color: Colors.white60,
+                        fontSize: 12,
+                      ),
                       weekendStyle: TextStyle(
-                          color: Colors.white60, fontSize: 12),
+                        color: Colors.white60,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
 
@@ -233,17 +257,19 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       },
                     ),
                     const SizedBox(width: 8),
-                    ...memberProvider.members.map((m) => Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: AppChip.selectable(
-                            label: m.name,
-                            isSelected: _selectedMemberId == m.id,
-                            onTap: () {
-                              setState(() => _selectedMemberId = m.id);
-                              _reload();
-                            },
-                          ),
-                        )),
+                    ...memberProvider.members.map(
+                      (m) => Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: AppChip.selectable(
+                          label: m.name,
+                          isSelected: _selectedMemberId == m.id,
+                          onTap: () {
+                            setState(() => _selectedMemberId = m.id);
+                            _reload();
+                          },
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -253,44 +279,43 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : provider.doses.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.event_available_outlined,
-                                size: 64,
-                                color: AppColors.secondary
-                                    .withValues(alpha: 0.3)),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Nenhuma dose para este dia',
-                              style: TextStyle(
-                                color:
-                                    AppColors.secondary.withValues(alpha: 0.6),
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.event_available_outlined,
+                          size: 64,
+                          color: AppColors.secondary.withValues(alpha: 0.3),
                         ),
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: provider.doses.length,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(height: 10),
-                        itemBuilder: (context, index) {
-                          final dose = provider.doses[index];
-                          return ScheduleDoseCard(
-                            dose: dose,
-                            formattedTime:
-                                _formatTime(dose.scheduledTime),
-                            onToggle: dose.doseStatus == 'PENDING'
-                                ? () => _confirmDose(
-                                    dose.id, dose.medicationName)
-                                : null,
-                          );
-                        },
-                      ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Nenhuma dose para este dia',
+                          style: TextStyle(
+                            color: AppColors.secondary.withValues(alpha: 0.6),
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: provider.doses.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final dose = provider.doses[index];
+                      return ScheduleDoseCard(
+                        dose: dose,
+                        formattedTime: _formatTime(dose.scheduledTime),
+                        onToggle:
+                            (dose.doseStatus == 'PENDING' ||
+                                dose.doseStatus == 'MISSED')
+                            ? () => _confirmDose(dose.id, dose.medicationName)
+                            : null,
+                      );
+                    },
+                  ),
           ),
         ],
       ),

@@ -52,7 +52,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
       setState(() => _userId = userData.id);
       setState(() {
         _nameController.text = userData.name;
-        _emailController.text = userData.email;
+        _emailController.text = userData.email!;
         _birthDateController.text = InputUtils.formatBirthDateForDisplay(userData.birthDate);
         _phoneController.text = userData.phone ?? '';
         _weightController.text = userData.weight != null && userData.weight! > 0

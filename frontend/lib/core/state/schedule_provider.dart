@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/models/schedule_dose_model.dart';
+import 'package:frontend/features/service/alarm_service.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../features/service/schedule_service.dart';
 
@@ -21,6 +22,9 @@ class ScheduleProvider extends ChangeNotifier {
   List<ScheduledDoseModel> get missedDoses =>
       _doses.where((d) => d.doseStatus == 'MISSED').toList();
 
+  List<ScheduledDoseModel> get delayedDoses =>
+      _doses.where((d) => d.doseStatus == 'DELAYED').toList();
+
   Future<void> loadTodayDoses({int? userId}) async {
     final targetId = userId ?? await SecureStorage.getUserId();
     if (targetId == null) return;
@@ -30,6 +34,7 @@ class ScheduleProvider extends ChangeNotifier {
 
     try {
       _doses = await _service.getTodayDoses(targetId);
+      await AlarmService.scheduleAllDoses(_doses);
     } finally {
       _isLoading = false;
       notifyListeners();

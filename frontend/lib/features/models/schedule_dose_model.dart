@@ -11,6 +11,7 @@ class ScheduledDoseModel {
   final int confirmationWindowMinutes;
   final String doseStatus;
   final bool withinWindow;
+  final String patientName;
 
   ScheduledDoseModel({
     required this.id,
@@ -25,6 +26,7 @@ class ScheduledDoseModel {
     required this.confirmationWindowMinutes,
     required this.doseStatus,
     required this.withinWindow,
+    required this.patientName,
   });
 
   factory ScheduledDoseModel.fromJson(Map<String, dynamic> json) {
@@ -41,6 +43,7 @@ class ScheduledDoseModel {
       confirmationWindowMinutes: json['confirmationWindowMinutes'],
       doseStatus: json['doseStatus'],
       withinWindow: json['withinWindow'] ?? false,
+      patientName: json['patientName'],
     );
   }
 }

@@ -73,13 +73,13 @@ class _MembersScreenState extends State<MembersScreen> {
                   Icon(
                     Icons.group_off,
                     size: 64,
-                    color: AppColors.secondary.withOpacity(0.4),
+                    color: AppColors.secondary.withValues(alpha: 0.4),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Nenhum membro cadastrado',
                     style: TextStyle(
-                      color: AppColors.secondary.withOpacity(0.6),
+                      color: AppColors.secondary.withValues(alpha: 0.6),
                       fontSize: 16,
                     ),
                   ),
@@ -89,7 +89,7 @@ class _MembersScreenState extends State<MembersScreen> {
           : ListView.separated(
               padding: const EdgeInsets.all(20),
               itemCount: provider.members.length,
-              separatorBuilder: (_, __) =>
+              separatorBuilder: (_, _) =>
                   const Divider(height: 1, color: AppColors.lightGrey),
               itemBuilder: (context, index) {
                 final member = provider.members[index];
@@ -99,7 +99,7 @@ class _MembersScreenState extends State<MembersScreen> {
                     vertical: 4,
                   ),
                   leading: CircleAvatar(
-                    backgroundColor: AppColors.primary.withOpacity(0.15),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.15),
                     child: Text(
                       member.name[0].toUpperCase(),
                       style: const TextStyle(
@@ -122,7 +122,7 @@ class _MembersScreenState extends State<MembersScreen> {
                         Text(
                           member.email!,
                           style: TextStyle(
-                            color: AppColors.secondary.withOpacity(0.6),
+                            color: AppColors.secondary.withValues(alpha: 0.6),
                             fontSize: 12,
                           ),
                         ),
@@ -131,13 +131,13 @@ class _MembersScreenState extends State<MembersScreen> {
                           Icon(
                             Icons.qr_code,
                             size: 12,
-                            color: AppColors.secondary.withOpacity(0.5),
+                            color: AppColors.secondary.withValues(alpha: 0.5),
                           ),
                           const SizedBox(width: 4),
                           Text(
                             member.memberCode ?? '',
                             style: TextStyle(
-                              color: AppColors.secondary.withOpacity(0.5),
+                              color: AppColors.secondary.withValues(alpha: 0.5),
                               fontSize: 11,
                             ),
                           ),

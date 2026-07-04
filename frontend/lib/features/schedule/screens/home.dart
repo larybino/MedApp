@@ -30,16 +30,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _reload() async {
     await context.read<ScheduleProvider>().loadTodayDoses(
-          userId: _selectedMemberId,
-        );
+      userId: _selectedMemberId,
+    );
   }
 
   Future<void> _confirmDose(int doseId, String medicationName) async {
+    final isLate =
+        context
+            .read<ScheduleProvider>()
+            .doses
+            .firstWhere((d) => d.id == doseId)
+            .doseStatus ==
+        'MISSED';
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Confirmar dose'),
-        content: Text('Confirmar que tomou "$medicationName"?'),
+        content: Text(
+          isLate
+              ? 'Esta dose foi marcada como perdida. Deseja registrar que tomou atrasado?'
+              : 'Confirmar que tomou "$medicationName"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -60,17 +71,14 @@ class _HomeScreenState extends State<HomeScreen> {
       try {
         await context.read<ScheduleProvider>().confirmDose(doseId);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Dose confirmada!')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Dose confirmada!')));
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.toString()),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
           );
         }
       }
@@ -112,17 +120,16 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-
           if (!provider.isLoading && provider.doses.isNotEmpty)
             Container(
               margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.3)),
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -138,8 +145,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: AppColors.primary,
                   ),
                   SummaryItem(
-                    label: 'Pendentes',
-                    value: provider.pendingDoses.length.toString(),
+                    label: 'Atrasadas',
+                    value: provider.delayedDoses.length.toString(),
                     color: Colors.orange,
                   ),
                   SummaryItem(
@@ -167,17 +174,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                     const SizedBox(width: 8),
-                    ...memberProvider.members.map((m) => Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: AppChip.selectable(
-                            label: m.name,
-                            isSelected: _selectedMemberId == m.id,
-                            onTap: () {
-                              setState(() => _selectedMemberId = m.id);
-                              _reload();
-                            },
-                          ),
-                        )),
+                    ...memberProvider.members.map(
+                      (m) => Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: AppChip.selectable(
+                          label: m.name,
+                          isSelected: _selectedMemberId == m.id,
+                          onTap: () {
+                            setState(() => _selectedMemberId = m.id);
+                            _reload();
+                          },
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -187,43 +196,43 @@ class _HomeScreenState extends State<HomeScreen> {
             child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : provider.doses.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.check_circle_outline,
-                              size: 64,
-                              color: AppColors.secondary.withValues(alpha: 0.3),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Nenhum medicamento para hoje',
-                              style: TextStyle(
-                                color: AppColors.secondary.withValues(alpha: 0.6),
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline,
+                          size: 64,
+                          color: AppColors.secondary.withValues(alpha: 0.3),
                         ),
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: provider.doses.length,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(height: 10),
-                        itemBuilder: (context, index) {
-                          final dose = provider.doses[index];
-                          return DoseCard(
-                            dose: dose,
-                            formattedTime: _formatTime(dose.scheduledTime),
-                            onConfirm: dose.doseStatus == 'PENDING'
-                                ? () => _confirmDose(
-                                    dose.id, dose.medicationName)
-                                : null,
-                          );
-                        },
-                      ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Nenhum medicamento para hoje',
+                          style: TextStyle(
+                            color: AppColors.secondary.withValues(alpha: 0.6),
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: provider.doses.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final dose = provider.doses[index];
+                      return DoseCard(
+                        dose: dose,
+                        formattedTime: _formatTime(dose.scheduledTime),
+                        onConfirm:
+                            (dose.doseStatus == 'PENDING' ||
+                                dose.doseStatus == 'MISSED')
+                            ? () => _confirmDose(dose.id, dose.medicationName)
+                            : null,
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -234,4 +243,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
