@@ -5,6 +5,7 @@ import 'package:frontend/features/members/screens/create_members_screen.dart';
 import 'package:frontend/features/members/screens/members_screen.dart';
 import 'package:frontend/features/schedule/screens/home.dart';
 import 'package:frontend/features/schedule/screens/schedule_screen.dart';
+import 'package:frontend/features/schedule/screens/history_screen.dart';
 import 'package:frontend/features/user/screens/change_password_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/features/auth/screens/forgot_password_screen.dart';
@@ -15,7 +16,7 @@ import 'package:frontend/features/auth/screens/splash_screen.dart';
 import 'package:frontend/features/settings/screens/settings_screen.dart';
 import 'package:frontend/features/user/screens/edit_user_screen.dart';
 import 'package:frontend/features/user/screens/user_profile_screen.dart';
-
+import 'package:frontend/main.dart';
 class Routes {
   static const String splash = '/splash';
   static const String home = '/home';
@@ -32,8 +33,10 @@ class Routes {
   static const String medications = '/medications';
   static const String createMedication = '/medications/create';
   static const String schedule = '/schedule';
+  static const String adherence = '/adherence';
 
   static final GoRouter router = GoRouter(
+    navigatorKey: navigatorKey,
     initialLocation: splash,
     routes: [
       GoRoute(
@@ -95,6 +98,10 @@ class Routes {
       GoRoute(
         path: schedule,
         builder: (context, state) => const ScheduleScreen(),
+      ),
+      GoRoute(
+        path: adherence,
+        builder: (context, state) => const HistoryScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

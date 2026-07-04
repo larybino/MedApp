@@ -6,7 +6,7 @@ import 'app_colors.dart';
 class AppTheme {
   static ThemeData get dark => ThemeData(
     useMaterial3: true,
-    scaffoldBackgroundColor: AppColors.background,
+    scaffoldBackgroundColor: const Color.from(alpha: 1, red: 0.929, green: 0.929, blue: 0.929),
 
     colorScheme: const ColorScheme.dark(
       primary:    AppColors.primary,
