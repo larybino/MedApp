@@ -50,6 +50,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
           Positioned.fill(
@@ -64,44 +65,55 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
           ),
           SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: height * 0.08),
-                const AuthHeader(title: 'Recuperar Senha'),
-                const Spacer(),
-                AuthBottomContainer(
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top -
+                      MediaQuery.of(context).padding.bottom,
+                ),
+              child: IntrinsicHeight(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      'Informe seu e-mail cadastrado e será enviado um código para redefinir sua senha.',
-                      style: GoogleFonts.dmSans(
-                        fontSize: 16,
-                        color: AppColors.secondary,
-                        height: 1.5,
-                      ),
-                    ),
-                    SizedBox(height: height * 0.03),
-                    CustomTextField(
-                      label: 'Email',
-                      keyboardType: TextInputType.emailAddress,
-                      controller: _emailController,
-                    ),
-                    SizedBox(height: height * 0.03),
-                    AppButton(
-                      label: 'Enviar',
-                      onPressed: _forgotPassword,
-                      variant: ButtonVariant.secondary,
-                      isLoading: _isLoading,
-                    ),
-                    SizedBox(height: height * 0.02),
-                    AuthLinkText(
-                      text: 'Lembrou a senha? ',
-                      linkText: 'Voltar ao login',
-                      onLinkTap: () => context.go(Routes.login),
+                    SizedBox(height: height * 0.08),
+                    const AuthHeader(title: 'Recuperar Senha'),
+                    const Spacer(),
+                    AuthBottomContainer(
+                      children: [
+                        Text(
+                          'Informe seu e-mail cadastrado e será enviado um código para redefinir sua senha.',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 16,
+                            color: AppColors.secondary,
+                            height: 1.5,
+                          ),
+                        ),
+                        SizedBox(height: height * 0.03),
+                        CustomTextField(
+                          label: 'Email',
+                          keyboardType: TextInputType.emailAddress,
+                          controller: _emailController,
+                        ),
+                        SizedBox(height: height * 0.03),
+                        AppButton(
+                          label: 'Enviar',
+                          onPressed: _forgotPassword,
+                          variant: ButtonVariant.secondary,
+                          isLoading: _isLoading,
+                        ),
+                        SizedBox(height: height * 0.02),
+                        AuthLinkText(
+                          text: 'Lembrou a senha? ',
+                          linkText: 'Voltar ao login',
+                          onLinkTap: () => context.go(Routes.login),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
+              ),
             ),
           ),
         ],

@@ -2,23 +2,16 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
 class AuthBottomContainer extends StatelessWidget {
-  const AuthBottomContainer({
-    super.key,
-    required this.children,
-    this.height,
-  });
+  const AuthBottomContainer({super.key, required this.children});
 
   final List<Widget> children;
-  final double? height;
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final containerHeight = height ?? screenHeight * 0.68;
 
     return SizedBox(
       width: double.infinity,
-      height: containerHeight,
       child: Container(
         padding: EdgeInsets.only(
           left: 28,

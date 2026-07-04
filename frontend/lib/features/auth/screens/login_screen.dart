@@ -61,6 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
           Positioned.fill(
@@ -75,50 +76,61 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
           SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: height * 0.08),
-                const AuthHeader(title: 'Login'),
-                const Spacer(),
-                AuthBottomContainer(
-                  children: [
-                    CustomTextField(
-                      label: 'Email',
-                      keyboardType: TextInputType.emailAddress,
-                      controller: _emailController,
-                    ),
-                    SizedBox(height: height * 0.05),
-                    CustomTextField(
-                      label: 'Senha',
-                      obscureText: true,
-                      enableObscureToggle: true,
-                      controller: _passwordController,
-                    ),
-                    SizedBox(height: height * 0.03),
-                    AuthLinkText(
-                      text: 'Esqueci minha ',
-                      linkText: 'senha?',
-                      centered: true,
-                      fontSize: 16,
-                      onLinkTap: () => context.go(Routes.forgotPassword),
-                    ),
-                    SizedBox(height: height * 0.03),
-                    AppButton(
-                      label: 'Entrar',
-                      onPressed: _login,
-                      variant: ButtonVariant.secondary,
-                      isLoading: _isLoading,
-                    ),
-                    SizedBox(height: height * 0.05),
-                    AuthLinkText(
-                      text: 'Não possui uma conta? ',
-                      linkText: 'Cadastra-se',
-                      onLinkTap: () => context.go(Routes.register),
-                    ),
-                  ],
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top -
+                      MediaQuery.of(context).padding.bottom,
                 ),
-              ],
+              child: IntrinsicHeight(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(height: height * 0.08),
+                      const AuthHeader(title: 'Login'),
+                      const Spacer(),
+                      AuthBottomContainer(
+                        children: [
+                          CustomTextField(
+                            label: 'Email',
+                            keyboardType: TextInputType.emailAddress,
+                            controller: _emailController,
+                          ),
+                          SizedBox(height: height * 0.05),
+                          CustomTextField(
+                            label: 'Senha',
+                            obscureText: true,
+                            enableObscureToggle: true,
+                            controller: _passwordController,
+                          ),
+                          SizedBox(height: height * 0.03),
+                          AuthLinkText(
+                            text: 'Esqueci minha ',
+                            linkText: 'senha?',
+                            centered: true,
+                            fontSize: 16,
+                            onLinkTap: () => context.go(Routes.forgotPassword),
+                          ),
+                          SizedBox(height: height * 0.03),
+                          AppButton(
+                            label: 'Entrar',
+                            onPressed: _login,
+                            variant: ButtonVariant.secondary,
+                            isLoading: _isLoading,
+                          ),
+                          SizedBox(height: height * 0.05),
+                          AuthLinkText(
+                            text: 'Não possui uma conta? ',
+                            linkText: 'Cadastra-se',
+                            onLinkTap: () => context.go(Routes.register),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ],

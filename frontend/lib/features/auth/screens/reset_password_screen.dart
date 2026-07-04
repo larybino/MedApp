@@ -21,7 +21,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   bool _isLoading = false;
 
   Future<void> _resetPassword() async {
-    if (_codeController.text.isEmpty || _newPasswordController.text.isEmpty || _confirmPasswordController.text.isEmpty) {
+    if (_codeController.text.isEmpty ||
+        _newPasswordController.text.isEmpty ||
+        _confirmPasswordController.text.isEmpty) {
       ErrorMessage.show(context, 'Preencha todos os campos');
       return;
     }
@@ -48,7 +50,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
-  
 
   @override
   void dispose() {
@@ -63,6 +64,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
           Positioned.fill(
@@ -72,73 +74,82 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             ),
           ),
           Positioned.fill(
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.35),
-            ),
+            child: Container(color: Colors.black.withValues(alpha: 0.35)),
           ),
           SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: height * 0.08),
-                const AuthHeader(title: 'Redefinir Senha'),
-                const Spacer(),
-                AuthBottomContainer(
-                  height: height * 0.72,
-                  children: [
-                    Text(
-                      'Enviamos um código para:',
-                      style: GoogleFonts.dmSans(
-                        fontSize: 16,
-                        color: AppColors.secondary,
-                        height: 1.5,
-                      ),
-                    ),
-                    Text(
-                      'seu e-mail cadastrado',
-                      style: GoogleFonts.dmSans(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.secondary,
-                      ),
-                    ),
-                    SizedBox(height: height * 0.03),
-                    CustomTextField(
-                      label: 'Código recebido por e-mail',
-                      keyboardType: TextInputType.number,
-                      controller: _codeController,
-                    ),
-                    SizedBox(height: height * 0.03),
-                    CustomTextField(
-                      label: 'Nova senha',
-                      obscureText: true,
-                      enableObscureToggle: true,
-                      controller: _newPasswordController,
-                    ),
-                    SizedBox(height: height * 0.03),
-                    CustomTextField(
-                      label: 'Repita a nova senha',
-                      obscureText: true,
-                      enableObscureToggle: true,
-                      controller: _confirmPasswordController,
-                    ),
-                    SizedBox(height: height * 0.05),
-                    AppButton(
-                      label: 'Alterar Senha',
-                      onPressed: _resetPassword,
-                      variant: ButtonVariant.secondary,
-                      isLoading: _isLoading,
-                    ),
-                    SizedBox(height: height * 0.02),
-                    AuthLinkText(
-                      text: 'Lembrou a senha? ',
-                      linkText: 'Voltar ao login',
-                      onLinkTap: () => context.go(Routes.login),
-                    ),
-                  ],
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight:
+                      MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top -
+                      MediaQuery.of(context).padding.bottom,
                 ),
-              ],
-            )
+                child: IntrinsicHeight(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(height: height * 0.08),
+                      const AuthHeader(title: 'Redefinir Senha'),
+                      const Spacer(),
+                      AuthBottomContainer(
+                        children: [
+                          Text(
+                            'Enviamos um código para:',
+                            style: GoogleFonts.dmSans(
+                              fontSize: 16,
+                              color: AppColors.secondary,
+                              height: 1.5,
+                            ),
+                          ),
+                          Text(
+                            'seu e-mail cadastrado',
+                            style: GoogleFonts.dmSans(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.secondary,
+                            ),
+                          ),
+                          SizedBox(height: height * 0.03),
+                          CustomTextField(
+                            label: 'Código recebido por e-mail',
+                            keyboardType: TextInputType.number,
+                            controller: _codeController,
+                          ),
+                          SizedBox(height: height * 0.03),
+                          CustomTextField(
+                            label: 'Nova senha',
+                            obscureText: true,
+                            enableObscureToggle: true,
+                            controller: _newPasswordController,
+                          ),
+                          SizedBox(height: height * 0.03),
+                          CustomTextField(
+                            label: 'Repita a nova senha',
+                            obscureText: true,
+                            enableObscureToggle: true,
+                            controller: _confirmPasswordController,
+                          ),
+                          SizedBox(height: height * 0.05),
+                          AppButton(
+                            label: 'Alterar Senha',
+                            onPressed: _resetPassword,
+                            variant: ButtonVariant.secondary,
+                            isLoading: _isLoading,
+                          ),
+                          SizedBox(height: height * 0.02),
+                          AuthLinkText(
+                            text: 'Lembrou a senha? ',
+                            linkText: 'Voltar ao login',
+                            onLinkTap: () => context.go(Routes.login),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
