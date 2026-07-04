@@ -7,6 +7,7 @@ import bino.laryssa.backend.model.ScheduleDose;
 import bino.laryssa.backend.model.dto.MedicationRequest;
 import bino.laryssa.backend.model.enums.DoseStatus;
 import bino.laryssa.backend.model.enums.ScheduleStatus;
+import bino.laryssa.backend.repository.MedicationRepository;
 import bino.laryssa.backend.repository.ScheduleDoseRepository;
 import bino.laryssa.backend.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class ScheduleService {
 
     private final ScheduleRepository scheduleRepository;
     private final ScheduleDoseRepository scheduleDoseRepository;
+    private final MedicationRepository medicationRepository;
 
     public Schedule create(Medication medication, MedicationRequest request) {
         if (scheduleRepository.existsByMedicationId(medication.getId()))
@@ -91,12 +93,22 @@ public class ScheduleService {
     public ScheduleDose confirmDose(Long doseId) {
         ScheduleDose dose = scheduleDoseRepository.findById(doseId).orElseThrow(() -> new NotFoundException("Dose não encontrada"));
 
-        if (dose.getDoseStatus() != DoseStatus.PENDING)
-            throw new IllegalArgumentException("Esta dose já foi processada: " + dose.getDoseStatus());
+        if (dose.getDoseStatus() == DoseStatus.TAKEN ||dose.getDoseStatus() == DoseStatus.DELAYED) {
+            throw new IllegalArgumentException("Esta dose já foi tomada: " + dose.getDoseStatus());
+        }
+
         dose.setDoseStatus(dose.isWithinConfirmationWindow()? DoseStatus.TAKEN: DoseStatus.DELAYED);
         dose.setConfirmedAt(LocalDateTime.now());
-        return scheduleDoseRepository.save(dose);
-    }
+        scheduleDoseRepository.save(dose);
+        
+        Medication medication = dose.getSchedule().getMedication();
+        if (medication.getCurrentStock() > 0) {
+            medication.setCurrentStock(medication.getCurrentStock() - 1);
+            medicationRepository.save(medication);
+        }
+
+        return dose;
+        }
 
     private void generateDosesPerPeriod(Schedule schedule, LocalDate from, LocalDate to) {
         if (schedule.getMedication() == null || schedule.getMedication().getStartTime() == null) {

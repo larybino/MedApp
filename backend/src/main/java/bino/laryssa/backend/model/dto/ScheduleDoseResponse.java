@@ -22,6 +22,7 @@ public class ScheduleDoseResponse {
     private int confirmationWindowMinutes;
     private DoseStatus doseStatus;
     private boolean withinWindow;
+    private String patientName;
 
     public static ScheduleDoseResponse toResponse(ScheduleDose dose) {
         ScheduleDoseResponse response = new ScheduleDoseResponse();
@@ -37,6 +38,7 @@ public class ScheduleDoseResponse {
         response.setConfirmationWindowMinutes(dose.getConfirmationWindowMinutes());
         response.setDoseStatus(dose.getDoseStatus());
         response.setWithinWindow(dose.isWithinConfirmationWindow());
+        response.setPatientName(dose.getSchedule().getMedication().getUser().getName());
         return response;
     }
 }
