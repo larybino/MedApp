@@ -13,9 +13,14 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 class CreateMedicationScreen extends StatefulWidget {
-  const CreateMedicationScreen({super.key, this.initialMedication});
+  const CreateMedicationScreen({
+    super.key,
+    this.initialMedication,
+    this.confirmAcquisitionMode = false,
+  });
 
   final MedicationModel? initialMedication;
+  final bool confirmAcquisitionMode;
 
   @override
   State<CreateMedicationScreen> createState() => _CreateMedicationScreenState();
@@ -37,6 +42,7 @@ class _MedicationFormData {
   DateTime? endDate;
   Uint8List? medicationImageBytes;
   String? medicationImageBase64;
+  bool acquisitionConfirmed = false;
 
   void dispose() {
     nameController.dispose();
@@ -70,9 +76,7 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
   void initState() {
     super.initState();
     final med = widget.initialMedication;
-    if (med == null) {
-      return;
-    }
+    if (med == null) return;
 
     final form = _forms.first;
     form.nameController.text = med.name;
@@ -87,6 +91,9 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
     form.endDate = InputUtils.parseIsoDate(med.endDate);
     form.startTime = InputUtils.parseTime(med.startTime);
     form.medicationImageBase64 = med.medicationImage;
+    form.acquisitionConfirmed = widget.confirmAcquisitionMode
+        ? true
+        : med.acquisitionConfirmed;
 
     if (med.treatmentDurationDays != null && med.treatmentDurationDays! > 0) {
       form.durationType = 'DAYS';
@@ -98,13 +105,14 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
 
     _selectedTargetUserId = med.userId;
 
-    _showAdvanced = (form.medicationImageBase64 != null &&
-        form.medicationImageBase64!.isNotEmpty) ||
-      form.endDate != null ||
-      form.stockController.text.isNotEmpty ||
-      form.activeIngredientsController.text.isNotEmpty ||
-      form.administrationRouteController.text.isNotEmpty ||
-      form.pharmaceuticalFormController.text.isNotEmpty;
+    _showAdvanced =
+        (form.medicationImageBase64 != null &&
+            form.medicationImageBase64!.isNotEmpty) ||
+        form.endDate != null ||
+        form.stockController.text.isNotEmpty ||
+        form.activeIngredientsController.text.isNotEmpty ||
+        form.administrationRouteController.text.isNotEmpty ||
+        form.pharmaceuticalFormController.text.isNotEmpty;
   }
 
   Future<void> _pickImage(int index) async {
@@ -119,20 +127,19 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
           children: [
             const SizedBox(height: 12),
             Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
                 color: AppColors.lightGrey,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 16),
-            // ListTile(
-            //   leading: const Icon(Icons.camera_alt, color: AppColors.primary),
-            //   title: const Text('Câmera'),
-            //   onTap: () => Navigator.pop(context, ImageSource.camera),
-            // ),
             ListTile(
-              leading: const Icon(Icons.photo_library, color: AppColors.primary),
+              leading: const Icon(
+                Icons.photo_library,
+                color: AppColors.primary,
+              ),
               title: const Text('Galeria'),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
@@ -202,7 +209,8 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
         'medicationImage': form.medicationImageBase64,
       if (form.startDate != null)
         'startDate': form.startDate!.toIso8601String().substring(0, 10),
-      if (form.durationType == 'DAYS' && form.durationController.text.isNotEmpty)
+      if (form.durationType == 'DAYS' &&
+          form.durationController.text.isNotEmpty)
         'treatmentDurationDays': int.tryParse(form.durationController.text),
       if (form.durationType == 'DATE' && form.endDate != null)
         'endDate': form.endDate!.toIso8601String().substring(0, 10),
@@ -212,6 +220,7 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
       if (form.stockController.text.isNotEmpty)
         'stockQuantity': int.tryParse(form.stockController.text),
       if (_selectedTargetUserId != null) 'userId': _selectedTargetUserId,
+      'acquisitionConfirmed': form.acquisitionConfirmed,
     };
   }
 
@@ -229,7 +238,8 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
           form.dosageController.text.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Nome e dosagem são obrigatórios em todos os itens')),
+            content: Text('Nome e dosagem são obrigatórios em todos os itens'),
+          ),
         );
         return;
       }
@@ -239,14 +249,15 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
     try {
       if (_isEdit) {
         final form = _forms.first;
-        await context
-            .read<MedicationProvider>()
-            .updateMedication(widget.initialMedication!.id, _buildPayload(form));
+        await context.read<MedicationProvider>().updateMedication(
+          widget.initialMedication!.id,
+          _buildPayload(form),
+        );
       } else {
         for (final form in _forms) {
-          await context
-              .read<MedicationProvider>()
-              .createMedication(_buildPayload(form));
+          await context.read<MedicationProvider>().createMedication(
+            _buildPayload(form),
+          );
         }
       }
       if (mounted) {
@@ -254,9 +265,7 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
           Navigator.pop(context, true);
         } else {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (_) => const MedicationListScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const MedicationListScreen()),
           );
         }
       }
@@ -264,8 +273,9 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(e.toString()),
-              backgroundColor: AppColors.danger),
+            content: Text(e.toString()),
+            backgroundColor: AppColors.danger,
+          ),
         );
       }
     } finally {
@@ -287,7 +297,8 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
     final uniqueMembers = {
       for (final m in memberProvider.members) m.id: m,
     }.values.toList();
-    final selectedUserId = _selectedTargetUserId != null &&
+    final selectedUserId =
+        _selectedTargetUserId != null &&
             uniqueMembers.any((m) => m.id == _selectedTargetUserId)
         ? _selectedTargetUserId
         : null;
@@ -302,12 +313,10 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-
             OutlinedButton.icon(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Funcionalidade em breve!')),
+                  const SnackBar(content: Text('Funcionalidade em breve!')),
                 );
               },
               icon: const Icon(Icons.document_scanner),
@@ -323,19 +332,16 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
             ),
             SizedBox(height: height * 0.03),
 
-            if (userProvider.isMaster &&
-                memberProvider.members.isNotEmpty) ...[
+            if (userProvider.isMaster && memberProvider.members.isNotEmpty) ...[
               SectionTitle(title: 'Para quem é este medicamento?'),
               const SizedBox(height: 8),
               DropdownField(
                 value: selectedUserId,
                 items: [
-                  const DropdownMenuItem(
-                      value: null, child: Text('Para mim')),
-                  ...uniqueMembers.map((m) => DropdownMenuItem(
-                        value: m.id,
-                        child: Text(m.name),
-                      )),
+                  const DropdownMenuItem(value: null, child: Text('Para mim')),
+                  ...uniqueMembers.map(
+                    (m) => DropdownMenuItem(value: m.id, child: Text(m.name)),
+                  ),
                 ],
                 onChanged: (v) =>
                     setState(() => _selectedTargetUserId = v as int?),
@@ -372,15 +378,17 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
               ),
               SizedBox(height: height * 0.015),
 
-              SectionTitle(title: 'Frequência'),
+              SectionTitle(title: 'Frequência*'),
               const SizedBox(height: 8),
               DropdownField(
                 value: _forms[i].selectedInterval,
                 items: _intervals
-                    .map((item) => DropdownMenuItem(
-                          value: item['value'],
-                          child: Text(item['label']!),
-                        ))
+                    .map(
+                      (item) => DropdownMenuItem(
+                        value: item['value'],
+                        child: Text(item['label']!),
+                      ),
+                    )
                     .toList(),
                 onChanged: (v) =>
                     setState(() => _forms[i].selectedInterval = v as String),
@@ -391,40 +399,73 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Expanded(
-                    child: DateTimeButton(
-                      icon: Icons.calendar_today,
-                      label: _forms[i].startDate != null
-                          ? '${_forms[i].startDate!.day.toString().padLeft(2, '0')}/${_forms[i].startDate!.month.toString().padLeft(2, '0')}/${_forms[i].startDate!.year}'
-                          : 'Data início',
-                      onTap: () => _pickDate(i),
+                  Checkbox(
+                    value: _forms[i].acquisitionConfirmed,
+                    onChanged: widget.confirmAcquisitionMode
+                        ? null
+                        : (v) => setState(
+                            () => _forms[i].acquisitionConfirmed = v ?? false,
+                          ),
+                    activeColor: AppColors.primary,
+                    side: const BorderSide(
+                      color: AppColors.secondary,
+                      width: 1.5,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: DateTimeButton(
-                      icon: Icons.access_time,
-                      label: _forms[i].startTime != null
-                          ? '${_forms[i].startTime!.hour.toString().padLeft(2, '0')}:${_forms[i].startTime!.minute.toString().padLeft(2, '0')}'
-                          : 'Horário',
-                      onTap: () => _pickTime(i),
-                    ),
+                  const Text(
+                    'Já tenho este medicamento',
+                    style: TextStyle(color: AppColors.secondary, fontSize: 14),
                   ),
                 ],
               ),
-              SizedBox(height: height * 0.02),
-              SectionTitle(title: 'Término do tratamento'),
+
+              if (_forms[i].acquisitionConfirmed) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DateTimeButton(
+                        icon: Icons.calendar_today,
+                        label: _forms[i].startDate != null
+                            ? '${_forms[i].startDate!.day.toString().padLeft(2, '0')}/${_forms[i].startDate!.month.toString().padLeft(2, '0')}/${_forms[i].startDate!.year}'
+                            : 'Data início',
+                        onTap: () => _pickDate(i),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DateTimeButton(
+                        icon: Icons.access_time,
+                        label: _forms[i].startTime != null
+                            ? '${_forms[i].startTime!.hour.toString().padLeft(2, '0')}:${_forms[i].startTime!.minute.toString().padLeft(2, '0')}'
+                            : 'Horário',
+                        onTap: () => _pickTime(i),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: height * 0.02),
+                SectionTitle(title: 'Término do tratamento'),
                 const SizedBox(height: 8),
                 DropdownField(
                   value: _forms[i].durationType,
                   items: const [
-                    DropdownMenuItem(value: 'DAYS', child: Text('Por quantidade de dias')),
-                    DropdownMenuItem(value: 'DATE', child: Text('Até uma data específica')),
-                    DropdownMenuItem(value: 'CONTINUOUS', child: Text('Uso contínuo (Sem data final)')),
+                    DropdownMenuItem(
+                      value: 'DAYS',
+                      child: Text('Por quantidade de dias'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'DATE',
+                      child: Text('Até uma data específica'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'CONTINUOUS',
+                      child: Text('Uso contínuo (Sem data final)'),
+                    ),
                   ],
-                  onChanged: (v) => setState(() => _forms[i].durationType = v as String),
+                  onChanged: (v) =>
+                      setState(() => _forms[i].durationType = v as String),
                 ),
-                
                 if (_forms[i].durationType == 'DAYS') ...[
                   SizedBox(height: height * 0.015),
                   CustomTextField(
@@ -433,7 +474,6 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
                     keyboardType: TextInputType.number,
                   ),
                 ],
-
                 if (_forms[i].durationType == 'DATE') ...[
                   SizedBox(height: height * 0.015),
                   DateTimeButton(
@@ -444,6 +484,16 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
                     onTap: () => _pickEndDate(i),
                   ),
                 ],
+              ],
+              SizedBox(height: height * 0.02),
+
+              SectionTitle(title: 'Estoque'),
+              const SizedBox(height: 8),
+              CustomTextField(
+                label: 'Quantidade inicial*',
+                controller: _forms[i].stockController,
+                keyboardType: TextInputType.number,
+              ),
               SizedBox(height: height * 0.02),
 
               if (_showAdvanced) ...[
@@ -453,15 +503,6 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
                   imageBytes: _forms[i].medicationImageBytes,
                   imageBase64: _forms[i].medicationImageBase64,
                   onTap: () => _pickImage(i),
-                ),
-                SizedBox(height: height * 0.02),
-                
-                SectionTitle(title: 'Estoque'),
-                const SizedBox(height: 8),
-                CustomTextField(
-                  label: 'Quantidade inicial',
-                  controller: _forms[i].stockController,
-                  keyboardType: TextInputType.number,
                 ),
                 SizedBox(height: height * 0.02),
                 SectionTitle(title: 'Informações adicionais'),
@@ -495,13 +536,9 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
 
             OutlinedButton.icon(
               onPressed: () => setState(() => _showAdvanced = !_showAdvanced),
-              icon: Icon(_showAdvanced
-                  ? Icons.expand_less
-                  : Icons.tune),
+              icon: Icon(_showAdvanced ? Icons.expand_less : Icons.tune),
               label: Text(
-                _showAdvanced
-                    ? 'Ocultar opções avançadas'
-                    : 'Opções avançadas',
+                _showAdvanced ? 'Ocultar opções avançadas' : 'Opções avançadas',
               ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,

@@ -12,24 +12,23 @@ class MedicationProvider extends ChangeNotifier {
   List<MedicationModel> get medications => _medications;
   bool get isLoading => _isLoading;
 
-  List<MedicationModel> get activeMedications => _medications
-      .where((m) => m.scheduleStatus == 'ACTIVE')
-      .toList();
+  List<MedicationModel> get activeMedications =>
+      _medications.where((m) => m.scheduleStatus == 'ACTIVE').toList();
 
   Future<void> loadMedications({int? userId}) async {
-  final targetId = userId ?? await SecureStorage.getUserId();
-  if (targetId == null) return;
+    final targetId = userId ?? await SecureStorage.getUserId();
+    if (targetId == null) return;
 
-  _isLoading = true;
-  notifyListeners();
-
-  try {
-    _medications = await _service.getMedications(targetId);
-  } finally {
-    _isLoading = false;
+    _isLoading = true;
     notifyListeners();
+
+    try {
+      _medications = await _service.getMedications(targetId);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
-}
 
   Future<void> createMedication(Map<String, dynamic> data) async {
     await _service.create(data);

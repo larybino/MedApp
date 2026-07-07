@@ -23,9 +23,7 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final userId = _selectedMemberId;
-      await context.read<MedicationProvider>().loadMedications(
-            userId: userId,
-          );
+      await context.read<MedicationProvider>().loadMedications(userId: userId);
       if (context.read<UserProvider>().isMaster) {
         await context.read<MemberProvider>().loadMembers();
       }
@@ -34,8 +32,8 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
 
   Future<void> _reload() async {
     await context.read<MedicationProvider>().loadMedications(
-          userId: _selectedMemberId,
-        );
+      userId: _selectedMemberId,
+    );
   }
 
   Future<void> _confirmDelete(int id, String name) async {
@@ -51,8 +49,7 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Remover',
-                style: TextStyle(color: Colors.red)),
+            child: const Text('Remover', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -63,16 +60,13 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
         await context.read<MedicationProvider>().deleteMedication(id);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Medicamento removido com sucesso!')),
+            const SnackBar(content: Text('Medicamento removido com sucesso!')),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(e.toString()),
-                backgroundColor: Colors.red),
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
           );
         }
       }
@@ -81,12 +75,18 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
 
   String _intervalLabel(String interval) {
     switch (interval) {
-      case 'FOUR_HOURS': return 'A cada 4h';
-      case 'SIX_HOURS': return 'A cada 6h';
-      case 'EIGHT_HOURS': return 'A cada 8h';
-      case 'TWELVE_HOURS': return 'A cada 12h';
-      case 'TWENTY_FOUR_HOURS': return '1x ao dia';
-      default: return 'Horário fixo';
+      case 'FOUR_HOURS':
+        return 'A cada 4h';
+      case 'SIX_HOURS':
+        return 'A cada 6h';
+      case 'EIGHT_HOURS':
+        return 'A cada 8h';
+      case 'TWELVE_HOURS':
+        return 'A cada 12h';
+      case 'TWENTY_FOUR_HOURS':
+        return '1x ao dia';
+      default:
+        return 'Horário fixo';
     }
   }
 
@@ -97,13 +97,9 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
     final memberProvider = context.watch<MemberProvider>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Remédios'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Remédios'), centerTitle: true),
       body: Column(
         children: [
-
           if (userProvider.isMaster && memberProvider.members.isNotEmpty)
             Container(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -120,17 +116,19 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
                       },
                     ),
                     const SizedBox(width: 8),
-                    ...memberProvider.members.map((m) => Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: AppChip.selectable(
-                            label: m.name,
-                            isSelected: _selectedMemberId == m.id,
-                            onTap: () {
-                              setState(() => _selectedMemberId = m.id);
-                              _reload();
-                            },
-                          ),
-                        )),
+                    ...memberProvider.members.map(
+                      (m) => Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: AppChip.selectable(
+                          label: m.name,
+                          isSelected: _selectedMemberId == m.id,
+                          onTap: () {
+                            setState(() => _selectedMemberId = m.id);
+                            _reload();
+                          },
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -140,84 +138,82 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
             child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : provider.medications.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.medication_outlined,
-                                size: 64,
-                                color:
-                                    AppColors.secondary.withValues(alpha: 0.3)),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Nenhum medicamento cadastrado',
-                              style: TextStyle(
-                                color: AppColors.secondary.withValues(alpha: 0.6),
-                                fontSize: 16,
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.medication_outlined,
+                          size: 64,
+                          color: AppColors.secondary.withValues(alpha: 0.3),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Nenhum medicamento cadastrado',
+                          style: TextStyle(
+                            color: AppColors.secondary.withValues(alpha: 0.6),
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: provider.medications.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final med = provider.medications[index];
+                      return MedicationCard(
+                        medication: med,
+                        intervalLabel: _intervalLabel(med.doseInterval),
+                        onDelete: () => _confirmDelete(med.id, med.name),
+                        onConfirm: () async {
+                          if (!mounted) return;
+                          final updated = await Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CreateMedicationScreen(
+                                initialMedication: med,
+                                confirmAcquisitionMode: true,
                               ),
                             ),
-                          ],
-                        ),
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: provider.medications.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 10),
-                        itemBuilder: (context, index) {
-                          final med = provider.medications[index];
-                          return MedicationCard(
-                            medication: med,
-                            intervalLabel: _intervalLabel(med.doseInterval),
-                            onDelete: () =>
-                                _confirmDelete(med.id, med.name),
-                            onConfirm: () async {
-                              try {
-                                await context
-                                    .read<MedicationProvider>()
-                                    .confirmAcquisition(med.id);
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content: Text(e.toString()),
-                                        backgroundColor: Colors.red),
-                                  );
-                                }
-                              }
-                            },
-                            onEndTreatment: () async {
-                              try {
-                                await context
-                                    .read<MedicationProvider>()
-                                    .endTreatment(med.id);
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content: Text(e.toString()),
-                                        backgroundColor: Colors.red),
-                                  );
-                                }
-                              }
-                            },
-                            onEdit: () async {
-                              if (!mounted) return;
-                              final updated = await Navigator.push<bool>(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => CreateMedicationScreen(
-                                    initialMedication: med,
-                                  ),
+                          );
+                          if (updated == true && mounted) _reload();
+                        },
+                        onEndTreatment: () async {
+                          try {
+                            await context
+                                .read<MedicationProvider>()
+                                .endTreatment(med.id);
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(e.toString()),
+                                  backgroundColor: Colors.red,
                                 ),
                               );
-                              if (updated == true && mounted) {
-                                _reload();
-                              }
-                            },
-                          );
+                            }
+                          }
                         },
-                      ),
+                        onEdit: () async {
+                          if (!mounted) return;
+                          final updated = await Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CreateMedicationScreen(
+                                initialMedication: med,
+                              ),
+                            ),
+                          );
+                          if (updated == true && mounted) {
+                            _reload();
+                          }
+                        },
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -228,8 +224,7 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
           if (mounted) {
             final created = await Navigator.push<bool>(
               context,
-              MaterialPageRoute(
-                  builder: (_) => const CreateMedicationScreen()),
+              MaterialPageRoute(builder: (_) => const CreateMedicationScreen()),
             );
             if (created == true && mounted) _reload();
           }

@@ -31,10 +31,7 @@ class MedicationService {
 
   Future<MedicationModel> create(Map<String, dynamic> data) async {
     try {
-      final response = await _dio.post(
-        ApiEndpoints.medications,
-        data: data,
-      );
+      final response = await _dio.post(ApiEndpoints.medications, data: data);
       return MedicationModel.fromJson(response.data);
     } on DioException catch (e) {
       throw _handleError(e);

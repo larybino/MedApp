@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/features/models/medication_model.dart';
-import 'package:frontend/shared/widgets/app_chip.dart';
+import 'package:frontend/shared/widgets/index.dart';
 
 class MedicationCard extends StatelessWidget {
   final MedicationModel medication;
@@ -23,29 +23,29 @@ class MedicationCard extends StatelessWidget {
     required this.onEdit,
   });
 
-  Color _statusColor() {
-    switch (medication.scheduleStatus) {
-      case 'ACTIVE':
-        return AppColors.primary;
-      case 'PAUSED':
-        return Colors.orange;
-      case 'COMPLETED':
-        return Colors.grey;
-      default:
-        return Colors.red;
-    }
-  }
-
   String _statusLabel() {
     switch (medication.scheduleStatus) {
       case 'ACTIVE':
         return 'Ativo';
-      case 'PAUSED':
-        return 'Pausado';
-      case 'COMPLETED':
+      case 'FINISHED':
         return 'Concluído';
-      default:
+      case 'CANCELLED':
         return 'Cancelado';
+      default:
+        return 'Aguardando aquisição';
+    }
+  }
+
+  Color _statusColor() {
+    switch (medication.scheduleStatus) {
+      case 'ACTIVE':
+        return AppColors.primary;
+      case 'FINISHED':
+        return Colors.grey;
+      case 'CANCELLED':
+        return Colors.red;
+      default:
+        return Colors.orange;
     }
   }
 
@@ -79,18 +79,18 @@ class MedicationCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: medication.medicationImage != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.memory(
-                          base64Decode(medication.medicationImage!),
-                          fit: BoxFit.cover,
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.memory(
+                            base64Decode(medication.medicationImage!),
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.medication_rounded,
+                          color: AppColors.primary,
+                          size: 24,
                         ),
-                      )
-                    : const Icon(
-                        Icons.medication_rounded,
-                        color: AppColors.primary,
-                        size: 24,
-                      ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -148,10 +148,7 @@ class MedicationCard extends StatelessWidget {
               spacing: 6,
               runSpacing: 6,
               children: [
-                AppChip(
-                  icon: Icons.access_time,
-                  label: intervalLabel,
-                ),
+                AppChip(icon: Icons.access_time, label: intervalLabel),
                 AppChip(
                   icon: Icons.circle,
                   label: _statusLabel(),
@@ -178,10 +175,7 @@ class MedicationCard extends StatelessWidget {
                     if (!medication.acquisitionConfirmed)
                       TextButton.icon(
                         onPressed: onConfirm,
-                        icon: const Icon(
-                          Icons.check_circle_outline,
-                          size: 16,
-                        ),
+                        icon: const Icon(Icons.check_circle_outline, size: 16),
                         label: const Text('Confirmar aquisição'),
                         style: TextButton.styleFrom(
                           foregroundColor: AppColors.primary,
@@ -225,4 +219,3 @@ class MedicationCard extends StatelessWidget {
     );
   }
 }
-
