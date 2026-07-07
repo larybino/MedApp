@@ -1,6 +1,7 @@
 package bino.laryssa.backend.service;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -42,7 +43,6 @@ public class MedicationService {
         medication.setActiveIngredients(request.getActiveIngredients());
         medication.setPharmaceuticalForm(request.getPharmaceuticalForm());
         medication.setAdministrationRoute(request.getAdministrationRoute());
-        medication.setStartTime(request.getStartTime());
         medication.setUser(targetUser);
 
         if (request.getStockQuantity() > 0) {
@@ -63,9 +63,14 @@ public class MedicationService {
 
     public List<MedicationResponse> listByUser(Long userId) {
         assertCanAccessUser(userId);
-        return medicationRepository
-                .findByUserIdAndSchedule_ScheduleStatusNot(userId, ScheduleStatus.CANCELLED)
-                .stream()
+
+        List<Medication> withSchedule = medicationRepository
+                .findByUserIdAndSchedule_ScheduleStatusNot(userId, ScheduleStatus.CANCELLED);
+
+        List<Medication> withoutSchedule = medicationRepository
+                .findByUserIdAndScheduleIsNull(userId);
+
+        return Stream.concat(withSchedule.stream(), withoutSchedule.stream())
                 .map(MedicationResponse::toResponse)
                 .toList();
     }
@@ -89,19 +94,23 @@ public class MedicationService {
         medication.setAdministrationRoute(request.getAdministrationRoute());
         medication.setStartTime(request.getStartTime());
         medication.setMedicationImage(request.getMedicationImage());
+        medication.setAcquisitionConfirmed(request.isAcquisitionConfirmed());
 
         if (request.getStockQuantity() > 0) {
             medication.setStockQuantity(request.getStockQuantity());
             medication.setCurrentStock(request.getStockQuantity());
         }
 
-        Medication saved = medicationRepository.save(medication);
+        medicationRepository.save(medication);
 
-        if (request.getStartDate() != null && medication.getSchedule() != null) {
+        if (request.isAcquisitionConfirmed() && medication.getSchedule() == null
+            && request.getStartDate() != null && request.getStartTime() != null) {
+            scheduleService.create(medication, request);
+        } else if (request.getStartDate() != null && medication.getSchedule() != null) {
             scheduleService.update(medication.getSchedule(), request);
         }
 
-        return MedicationResponse.toResponse( medicationRepository.findById(saved.getId()).orElseThrow());
+        return MedicationResponse.toResponse(medicationRepository.findById(id).orElseThrow());
     }
 
     public MedicationResponse confirmAcquisition(Long id) {

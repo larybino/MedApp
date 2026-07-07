@@ -28,6 +28,7 @@ public class MedicationRequest {
     private LocalDate endDate;
     private LocalTime startTime;
     private int treatmentDurationDays;
+    @NotNull(message = "A quantidade de estoque e obrigatória")
     private int stockQuantity;
     private int currentStock;
     private Long userId;

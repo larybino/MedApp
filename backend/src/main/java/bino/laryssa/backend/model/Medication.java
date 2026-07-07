@@ -53,7 +53,7 @@ public class Medication  {
     @OneToOne(mappedBy = "medication", cascade = CascadeType.ALL)
     private Schedule schedule;
     private LocalTime startTime;
-
+    @Column(nullable = false)
     private int stockQuantity;
     private int currentStock;
 
