@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/models/schedule_dose_model.dart';
 import 'package:frontend/features/service/alarm_service.dart';
+import 'package:frontend/features/service/notification_service.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../features/service/schedule_service.dart';
 
@@ -35,6 +36,7 @@ class ScheduleProvider extends ChangeNotifier {
     try {
       _doses = await _service.getTodayDoses(targetId);
       await AlarmService.scheduleAllDoses(_doses);
+      await NotificationService.scheduleAllConfirmations(_doses);
     } finally {
       _isLoading = false;
       notifyListeners();

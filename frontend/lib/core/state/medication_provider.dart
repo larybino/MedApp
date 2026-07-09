@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/models/medication_model.dart';
 import 'package:frontend/features/service/medication_service.dart';
+import 'package:frontend/features/service/notification_service.dart';
 import '../../../core/storage/secure_storage.dart';
 
 class MedicationProvider extends ChangeNotifier {
@@ -24,6 +25,9 @@ class MedicationProvider extends ChangeNotifier {
 
     try {
       _medications = await _service.getMedications(targetId);
+      for (final med in _medications) {
+        await NotificationService.checkAndNotifyLowStock(med);
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
