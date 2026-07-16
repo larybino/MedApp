@@ -22,9 +22,18 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _reload();
-      if (context.read<UserProvider>().isMaster) {
+
+      final userProvider = context.read<UserProvider>();
+      if (userProvider.isMaster) {
         await context.read<MemberProvider>().loadMembers();
       }
+
+      if (!mounted) return;
+      final memberProvider = context.read<MemberProvider>();
+      await context.read<ScheduleProvider>().syncNotifications(
+        isMaster: userProvider.isMaster,
+        memberIds: memberProvider.members.map((m) => m.id).toList(),
+      );
     });
   }
 

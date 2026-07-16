@@ -25,12 +25,15 @@ class MedicationProvider extends ChangeNotifier {
 
     try {
       _medications = await _service.getMedications(targetId);
-      for (final med in _medications) {
-        await NotificationService.checkAndNotifyLowStock(med);
-      }
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> checkLowStockAlerts() async {
+    for (final med in _medications) {
+      await NotificationService.checkAndNotifyLowStock(med);
     }
   }
 

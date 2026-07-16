@@ -4,6 +4,8 @@ import 'package:frontend/core/routing/bottom_nav_handler.dart';
 import 'package:frontend/core/state/member_provider.dart';
 import 'package:frontend/features/service/auth_service.dart';
 import 'package:frontend/features/service/user_service.dart';
+import 'package:frontend/features/settings/screens/about_screen.dart';
+import 'package:frontend/features/settings/screens/notification_settings_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/core/routing/routes.dart';
 import 'package:frontend/core/theme/app_colors.dart';
@@ -23,7 +25,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Uint8List? _profileImageBytes;
   final _userService = UserService();
 
-   @override
+  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -34,8 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     });
   }
-  
-  
+
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
@@ -63,7 +64,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Excluir', style: TextStyle(color: AppColors.danger)),
+              child: const Text(
+                'Excluir',
+                style: TextStyle(color: AppColors.danger),
+              ),
             ),
           ],
         ),
@@ -85,10 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Configurações'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Configurações'), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -100,16 +101,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   radius: 40,
                   backgroundColor: AppColors.darkGrey,
                   backgroundImage: _profileImageBytes != null
-                            ? MemoryImage(_profileImageBytes!)
-                            : null,
+                      ? MemoryImage(_profileImageBytes!)
+                      : null,
                   child: _profileImageBytes == null
-                            ? const Icon(Icons.person, size: 44, color: AppColors.white)
-                            : null,
+                      ? const Icon(
+                          Icons.person,
+                          size: 44,
+                          color: AppColors.white,
+                        )
+                      : null,
                 ),
                 SizedBox(width: width * 0.05),
                 Text(
                   user?.name ?? "",
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: AppColors.secondary),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.secondary,
+                  ),
                 ),
               ],
             ),
@@ -124,7 +132,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     trailing: Icon(Icons.arrow_forward_ios),
                     iconColor: AppColors.secondary,
                     onTap: () async {
-                      final updated = await context.push<bool>(Routes.userProfile);
+                      final updated = await context.push<bool>(
+                        Routes.userProfile,
+                      );
                       if (updated == true) {
                         await context.read<UserProvider>().refreshUser();
                       }
@@ -132,14 +142,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     textColor: AppColors.secondary,
                   ),
                   const Divider(height: 1, color: AppColors.lightGrey),
-                  if(userProvider.isMaster)
+                  if (userProvider.isMaster)
                     ListTile(
                       leading: Icon(Icons.person_pin_sharp),
                       title: Text('Gerenciar perfis'),
                       trailing: Icon(Icons.arrow_forward_ios),
                       iconColor: AppColors.secondary,
                       onTap: () async {
-                        final updated = await context.push<bool>(Routes.members);
+                        final updated = await context.push<bool>(
+                          Routes.members,
+                        );
                         if (updated == true) {
                           await context.read<MemberProvider>().loadMembers();
                         }
@@ -153,7 +165,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     trailing: Icon(Icons.arrow_forward_ios),
                     iconColor: AppColors.secondary,
                     onTap: () async {
-                      final updated = await context.push<bool>(Routes.changePassword);
+                      final updated = await context.push<bool>(
+                        Routes.changePassword,
+                      );
                       if (updated == true) {
                         await context.read<UserProvider>().refreshUser();
                       }
@@ -167,6 +181,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     trailing: Icon(Icons.arrow_forward_ios),
                     iconColor: AppColors.secondary,
                     onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationSettingsScreen(),
+                        ),
+                      );
                     },
                     textColor: AppColors.secondary,
                   ),
@@ -193,6 +213,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     trailing: Icon(Icons.arrow_forward_ios),
                     iconColor: AppColors.secondary,
                     onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AboutScreen()),
+                      );
                     },
                     textColor: AppColors.secondary,
                   ),
@@ -211,7 +235,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const Divider(height: 1, color: AppColors.lightGrey),
                   ListTile(
-                    leading: Icon(Icons.delete_outline, color: AppColors.secondary),
+                    leading: Icon(
+                      Icons.delete_outline,
+                      color: AppColors.secondary,
+                    ),
                     title: Text('Excluir conta'),
                     trailing: Icon(Icons.arrow_forward_ios),
                     iconColor: AppColors.secondary,

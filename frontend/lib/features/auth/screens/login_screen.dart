@@ -30,11 +30,11 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login bem-sucedido!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Login bem-sucedido!')));
 
-        context.go(Routes.settings);
+        context.go(Routes.home);
       }
     } catch (e) {
       if (mounted) _showError(e.toString());
@@ -71,21 +71,20 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
           Positioned.fill(
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.35),
-            ),
+            child: Container(color: Colors.black.withValues(alpha: 0.35)),
           ),
           SafeArea(
             child: SingleChildScrollView(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  minHeight: MediaQuery.of(context).size.height -
+                  minHeight:
+                      MediaQuery.of(context).size.height -
                       MediaQuery.of(context).padding.top -
                       MediaQuery.of(context).padding.bottom,
                 ),
-              child: IntrinsicHeight(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                child: IntrinsicHeight(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(height: height * 0.08),
                       const AuthHeader(title: 'Login'),

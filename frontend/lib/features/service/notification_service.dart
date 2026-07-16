@@ -1,6 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:frontend/features/models/medication_model.dart';
 import 'package:frontend/features/models/schedule_dose_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 
@@ -94,24 +95,41 @@ class NotificationService {
     if (dosesPerDay == 0) return;
 
     final daysLeft = medication.currentStock! ~/ dosesPerDay;
+    if (daysLeft < 5 || daysLeft > 10) return;
 
-    if (daysLeft >= 5 && daysLeft <= 10) {
-      await _plugin.show(
-        medication.id + 200000,
-        'Estoque baixo — ${medication.name}',
-        'Restam aproximadamente $daysLeft dias de estoque. '
-            'Lembre-se de repor o medicamento.',
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            _stockChannelId,
-            'Alerta de estoque',
-            importance: Importance.high,
-            priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
-          ),
+    final alreadyNotified = await _wasNotifiedToday(medication.id);
+    if (alreadyNotified) return;
+
+    await _plugin.show(
+      medication.id + 200000,
+      'Estoque baixo — ${medication.name}',
+      'Restam aproximadamente $daysLeft dias de estoque. '
+          'Lembre-se de repor o medicamento.',
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          _stockChannelId,
+          'Alerta de estoque',
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
         ),
-      );
-    }
+      ),
+    );
+
+    await _markNotifiedToday(medication.id);
+  }
+
+  static Future<bool> _wasNotifiedToday(int medicationId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastDate = prefs.getString('low_stock_notified_$medicationId');
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    return lastDate == today;
+  }
+
+  static Future<void> _markNotifiedToday(int medicationId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    await prefs.setString('low_stock_notified_$medicationId', today);
   }
 
   static Future<void> cancelConfirmationNotification(int doseId) async {

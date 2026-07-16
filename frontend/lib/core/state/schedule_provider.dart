@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/storage/notification_preferences.dart';
 import 'package:frontend/features/models/schedule_dose_model.dart';
 import 'package:frontend/features/service/alarm_service.dart';
 import 'package:frontend/features/service/notification_service.dart';
@@ -35,8 +36,6 @@ class ScheduleProvider extends ChangeNotifier {
 
     try {
       _doses = await _service.getTodayDoses(targetId);
-      await AlarmService.scheduleAllDoses(_doses);
-      await NotificationService.scheduleAllConfirmations(_doses);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -61,5 +60,28 @@ class ScheduleProvider extends ChangeNotifier {
   Future<void> confirmDose(int doseId) async {
     await _service.confirmDose(doseId);
     await loadTodayDoses();
+  }
+
+  Future<void> syncNotifications({
+    required bool isMaster,
+    required List<int> memberIds,
+  }) async {
+    final targetId = await SecureStorage.getUserId();
+    if (targetId == null) return;
+
+    final onlyMyDoses = await NotificationPreferences.getOnlyMyDoses();
+
+    final userIdsToNotify = <int>[targetId];
+    if (isMaster && !onlyMyDoses) {
+      userIdsToNotify.addAll(memberIds);
+    }
+
+    final allDoses = <ScheduledDoseModel>[];
+    for (final id in userIdsToNotify) {
+      allDoses.addAll(await _service.getTodayDoses(id));
+    }
+
+    await AlarmService.scheduleAllDoses(allDoses);
+    await NotificationService.scheduleAllConfirmations(allDoses);
   }
 }

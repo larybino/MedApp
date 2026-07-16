@@ -24,6 +24,7 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final userId = _selectedMemberId;
       await context.read<MedicationProvider>().loadMedications(userId: userId);
+      await context.read<MedicationProvider>().checkLowStockAlerts();
       if (context.read<UserProvider>().isMaster) {
         await context.read<MemberProvider>().loadMembers();
       }
