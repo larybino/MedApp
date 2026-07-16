@@ -17,3 +17,5 @@ export 'summary_item.dart';
 export 'schedule_dose_card.dart';
 export 'app_button.dart';
 export 'app_chip.dart';
+export 'history_card.dart';
+export 'dose_badge.dart';
