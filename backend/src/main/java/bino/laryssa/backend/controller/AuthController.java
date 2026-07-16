@@ -11,9 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -27,22 +26,18 @@ public class AuthController {
     private final UserRepository userRepository;
 
     @PostMapping("/login")
-    public ResponseEntity<JwtToken> login(@Valid @RequestBody LoginRequest request,
-                                        HttpServletRequest httpRequest) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request,
+                                    HttpServletRequest httpRequest) {
         log.info("Tentativa de login: {}", request.getEmail());
-        try {
-            User user = userRepository.findByEmailAndActiveTrue(request.getEmail())
-                    .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
 
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            String.valueOf(user.getId()), request.getPassword()));  // passa ID
-        } catch (AuthenticationException ex) {
-            log.warn("Credenciais inválidas para: {}", request.getEmail());
-            return ResponseEntity.badRequest().build();
-        }
+        User user = userRepository.findByEmailAndActiveTrue(request.getEmail())
+                .orElseThrow(() -> new BadCredentialsException("Email ou senha inválidos"));
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        String.valueOf(user.getId()), request.getPassword()));
 
         JwtToken token = jwtUserDetailsService.getTokenAuthenticated(request.getEmail());
         return ResponseEntity.ok(token);
     }
-}
+}  

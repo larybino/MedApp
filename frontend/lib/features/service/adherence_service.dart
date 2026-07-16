@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:frontend/core/utils/error_handler.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../models/adherence_history_model.dart';
@@ -16,7 +17,7 @@ class AdherenceService {
           .map((e) => AdherenceHistoryModel.fromJson(e))
           .toList();
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw ApiErrorHandler.handle(e);
     }
   }
 
@@ -38,17 +39,7 @@ class AdherenceService {
           .map((e) => AdherenceHistoryModel.fromJson(e))
           .toList();
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw ApiErrorHandler.handle(e);
     }
-  }
-
-  String _handleError(DioException e) {
-    if (e.response != null) {
-      return e.response?.data['error']?.toString() ?? 'Erro desconhecido';
-    }
-    if (e.type == DioExceptionType.connectionError) {
-      return 'Sem conexão com o servidor';
-    }
-    return 'Erro inesperado';
   }
 }

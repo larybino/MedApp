@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:frontend/core/utils/error_handler.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_endpoints.dart';
 import '../../core/storage/secure_storage.dart';
@@ -23,14 +24,18 @@ class AuthService {
       }
       await SecureStorage.saveToken(token);
       await SecureStorage.saveUserId(userId);
-      await SecureStorage.saveRole(role); 
+      await SecureStorage.saveRole(role);
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw ApiErrorHandler.handle(e);
     }
   }
 
-  Future<void> register(String name, String email,
-    String password, String confirmPassword) async {
+  Future<void> register(
+    String name,
+    String email,
+    String password,
+    String confirmPassword,
+  ) async {
     try {
       final response = await _dio.post(
         ApiEndpoints.register,
@@ -54,23 +59,23 @@ class AuthService {
       await SecureStorage.saveUserId(userId);
       await SecureStorage.saveRole(role);
     } on DioException catch (e) {
-      throw _handleError(e);
-    }
-}
-
-  Future<void> forgotPassword(String email) async {
-    try {
-      await _dio.post(
-        ApiEndpoints.forgotPassword,
-        data: {'email': email},
-      );
-    } on DioException catch (e) {
-      throw _handleError(e);
+      throw ApiErrorHandler.handle(e);
     }
   }
 
-  Future<void> resetPassword(String token,
-      String newPassword, String confirmPassword) async {
+  Future<void> forgotPassword(String email) async {
+    try {
+      await _dio.post(ApiEndpoints.forgotPassword, data: {'email': email});
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handle(e);
+    }
+  }
+
+  Future<void> resetPassword(
+    String token,
+    String newPassword,
+    String confirmPassword,
+  ) async {
     try {
       await _dio.post(
         ApiEndpoints.resetPassword,
@@ -81,21 +86,11 @@ class AuthService {
         },
       );
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw ApiErrorHandler.handle(e);
     }
   }
 
   Future<void> logout() async {
     await SecureStorage.clear();
-  }
-
-  String _handleError(DioException e) {
-    if (e.response != null) {
-      return e.response?.data['error']?.toString() ?? 'Erro desconhecido';
-    }
-    if (e.type == DioExceptionType.connectionError) {
-      return 'Sem conexão com o servidor';
-    }
-    return 'Erro inesperado';
   }
 }

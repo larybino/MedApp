@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:frontend/core/utils/error_handler.dart';
 import 'package:frontend/features/models/schedule_dose_model.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_endpoints.dart';
@@ -16,12 +17,14 @@ class ScheduleService {
           .map((e) => ScheduledDoseModel.fromJson(e))
           .toList();
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw ApiErrorHandler.handle(e);
     }
   }
 
   Future<List<ScheduledDoseModel>> getDosesByDate(
-      int userId, String date) async {
+    int userId,
+    String date,
+  ) async {
     try {
       final response = await _dio.get(
         ApiEndpoints.scheduleDoses,
@@ -31,7 +34,7 @@ class ScheduleService {
           .map((e) => ScheduledDoseModel.fromJson(e))
           .toList();
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw ApiErrorHandler.handle(e);
     }
   }
 
@@ -40,17 +43,7 @@ class ScheduleService {
       final response = await _dio.put(ApiEndpoints.confirmDose(doseId));
       return ScheduledDoseModel.fromJson(response.data);
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw ApiErrorHandler.handle(e);
     }
-  }
-
-  String _handleError(DioException e) {
-    if (e.response != null) {
-      return e.response?.data['error']?.toString() ?? 'Erro desconhecido';
-    }
-    if (e.type == DioExceptionType.connectionError) {
-      return 'Sem conexão com o servidor';
-    }
-    return 'Erro inesperado';
   }
 }

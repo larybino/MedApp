@@ -94,7 +94,8 @@ public class ScheduleService {
         ScheduleDose dose = scheduleDoseRepository.findById(doseId).orElseThrow(() -> new NotFoundException("Dose não encontrada"));
 
         if (dose.getDoseStatus() == DoseStatus.TAKEN ||dose.getDoseStatus() == DoseStatus.DELAYED) {
-            throw new IllegalArgumentException("Esta dose já foi tomada: " + dose.getDoseStatus());
+            String statusText = dose.getDoseStatus() == DoseStatus.TAKEN ? "tomada" : "registrada como atrasada";
+            throw new IllegalArgumentException("Esta dose já foi " + statusText);        
         }
 
         dose.setDoseStatus(dose.isWithinConfirmationWindow()? DoseStatus.TAKEN: DoseStatus.DELAYED);

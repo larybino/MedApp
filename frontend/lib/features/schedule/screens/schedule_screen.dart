@@ -137,27 +137,18 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   // Header com data selecionada
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                    child: Row(
-                      children: [
-                        Text(
-                          _formatHeaderDate(_selectedDay),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const Spacer(),
-                        Icon(
-                          Icons.edit_outlined,
-                          color: AppColors.primary,
-                          size: 20,
-                        ),
-                      ],
+                    child: Text(
+                      _formatHeaderDate(_selectedDay),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
 
                   TableCalendar(
+                    locale: 'pt_BR',
                     firstDay: DateTime.now().subtract(
                       const Duration(days: 365),
                     ),
