@@ -3,6 +3,8 @@ class MedicationModel {
   final String name;
   final String dosage;
   final String doseInterval;
+  final double doseAmount;
+  final String doseUnit;
 
   final String? medicationImage;
   final bool acquisitionConfirmed;
@@ -26,6 +28,8 @@ class MedicationModel {
     required this.name,
     required this.dosage,
     required this.doseInterval,
+    required this.doseAmount,
+    required this.doseUnit,
     this.activeIngredients,
     this.pharmaceuticalForm,
     this.administrationRoute,
@@ -48,6 +52,8 @@ class MedicationModel {
       name: json['name'],
       dosage: json['dosage'],
       doseInterval: json['doseInterval'],
+      doseAmount: (json['doseAmount'] as num?)?.toDouble() ?? 1.0,
+      doseUnit: json['doseUnit'] ?? 'unidade',
       activeIngredients: json['activeIngredients'],
       pharmaceuticalForm: json['pharmaceuticalForm'],
       administrationRoute: json['administrationRoute'],

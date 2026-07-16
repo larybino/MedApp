@@ -15,6 +15,9 @@ public class MedicationResponse {
     private String name;
     private String dosage;
     private DoseInterval doseInterval;
+    private Double doseAmount;
+    private String doseUnit;
+
     private String activeIngredients;
     private String pharmaceuticalForm;
     private String administrationRoute;
@@ -40,6 +43,8 @@ public class MedicationResponse {
         response.setName(med.getName());
         response.setDosage(med.getDosage());
         response.setDoseInterval(med.getDoseInterval());
+        response.setDoseAmount(med.getDoseAmount());
+        response.setDoseUnit(med.getDoseUnit());
         response.setActiveIngredients(med.getActiveIngredients());
         response.setPharmaceuticalForm(med.getPharmaceuticalForm());
         response.setAdministrationRoute(med.getAdministrationRoute());

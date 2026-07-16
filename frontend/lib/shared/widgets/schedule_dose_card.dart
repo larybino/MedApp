@@ -31,11 +31,9 @@ class ScheduleDoseCard extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-            horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-
             // Informações
             Expanded(
               child: Column(
@@ -49,9 +47,7 @@ class ScheduleDoseCard extends StatelessWidget {
                           : AppColors.secondary,
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
-                      decoration: isMissed
-                          ? TextDecoration.lineThrough
-                          : null,
+                      decoration: isMissed ? TextDecoration.lineThrough : null,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -66,7 +62,6 @@ class ScheduleDoseCard extends StatelessWidget {
               ),
             ),
 
-            // Toggle
             GestureDetector(
               onTap: onToggle,
               child: AnimatedContainer(
@@ -78,8 +73,8 @@ class ScheduleDoseCard extends StatelessWidget {
                   color: isTaken
                       ? AppColors.primary
                       : isMissed
-                          ? Colors.grey.withValues(alpha: 0.3)
-                          : AppColors.secondary.withValues(alpha: 0.2),
+                      ? Colors.grey.withValues(alpha: 0.3)
+                      : AppColors.secondary.withValues(alpha: 0.2),
                 ),
                 child: AnimatedAlign(
                   duration: const Duration(milliseconds: 200),

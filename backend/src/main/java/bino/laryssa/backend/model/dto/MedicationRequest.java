@@ -17,7 +17,10 @@ public class MedicationRequest {
     private String dosage;
     @NotNull(message = "O intervalo de dose e obrigatório")
     private DoseInterval doseInterval;
-
+    @NotNull(message = "A quantidade por dose e obrigatória")
+    private Double doseAmount;
+    @NotBlank(message = "A unidade da dose e obrigatória")
+    private String doseUnit;
     private String activeIngredients;
     private String administrationRoute;
     private String pharmaceuticalForm;

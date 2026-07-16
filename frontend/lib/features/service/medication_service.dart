@@ -1,4 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
+import 'package:frontend/core/utils/error_handler.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:frontend/features/models/extracted_medication_model.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../models/medication_model.dart';
@@ -16,7 +21,7 @@ class MedicationService {
           .map((e) => MedicationModel.fromJson(e))
           .toList();
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw ApiErrorHandler.handle(e);
     }
   }
 
@@ -25,7 +30,7 @@ class MedicationService {
       final response = await _dio.get(ApiEndpoints.medicationById(id));
       return MedicationModel.fromJson(response.data);
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw ApiErrorHandler.handle(e);
     }
   }
 
@@ -34,7 +39,7 @@ class MedicationService {
       final response = await _dio.post(ApiEndpoints.medications, data: data);
       return MedicationModel.fromJson(response.data);
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw ApiErrorHandler.handle(e);
     }
   }
 
@@ -46,7 +51,7 @@ class MedicationService {
       );
       return MedicationModel.fromJson(response.data);
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw ApiErrorHandler.handle(e);
     }
   }
 
@@ -54,7 +59,7 @@ class MedicationService {
     try {
       await _dio.delete(ApiEndpoints.medicationById(id));
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw ApiErrorHandler.handle(e);
     }
   }
 
@@ -63,7 +68,7 @@ class MedicationService {
       final response = await _dio.put(ApiEndpoints.confirmAcquisition(id));
       return MedicationModel.fromJson(response.data);
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw ApiErrorHandler.handle(e);
     }
   }
 
@@ -72,17 +77,36 @@ class MedicationService {
       final response = await _dio.put(ApiEndpoints.endTreatment(id));
       return MedicationModel.fromJson(response.data);
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw ApiErrorHandler.handle(e);
     }
   }
 
-  String _handleError(DioException e) {
-    if (e.response != null) {
-      return e.response?.data['error']?.toString() ?? 'Erro desconhecido';
+  Future<List<ExtractedMedicationModel>> extractFromPrescription(
+    Uint8List fileBytes,
+    String fileName,
+    String mimeType,
+  ) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': MultipartFile.fromBytes(
+          fileBytes,
+          filename: fileName,
+          contentType: MediaType.parse(mimeType),
+        ),
+      });
+
+      final response = await _dio.post(
+        ApiEndpoints.extractMedication,
+        data: formData,
+        options: Options(contentType: 'multipart/form-data'),
+      );
+
+      final medications = response.data['medications'] as List;
+      return medications
+          .map((e) => ExtractedMedicationModel.fromJson(e))
+          .toList();
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handle(e);
     }
-    if (e.type == DioExceptionType.connectionError) {
-      return 'Sem conexão com o servidor';
-    }
-    return 'Erro inesperado';
   }
 }

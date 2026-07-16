@@ -40,6 +40,8 @@ public class MedicationService {
         medication.setName(request.getName());
         medication.setDosage(request.getDosage());
         medication.setDoseInterval(request.getDoseInterval());
+        medication.setDoseAmount(request.getDoseAmount());
+        medication.setDoseUnit(request.getDoseUnit());
         medication.setActiveIngredients(request.getActiveIngredients());
         medication.setPharmaceuticalForm(request.getPharmaceuticalForm());
         medication.setAdministrationRoute(request.getAdministrationRoute());
@@ -65,10 +67,10 @@ public class MedicationService {
         assertCanAccessUser(userId);
 
         List<Medication> withSchedule = medicationRepository
-                .findByUserIdAndSchedule_ScheduleStatusNot(userId, ScheduleStatus.CANCELLED);
+                .findByUserIdAndSchedule_ScheduleStatusNotAndActiveTrue(userId, ScheduleStatus.CANCELLED);
 
         List<Medication> withoutSchedule = medicationRepository
-                .findByUserIdAndScheduleIsNull(userId);
+                .findByUserIdAndScheduleIsNullAndActiveTrue(userId);
 
         return Stream.concat(withSchedule.stream(), withoutSchedule.stream())
                 .map(MedicationResponse::toResponse)
@@ -89,6 +91,8 @@ public class MedicationService {
         medication.setName(request.getName());
         medication.setDosage(request.getDosage());
         medication.setDoseInterval(request.getDoseInterval());
+        medication.setDoseAmount(request.getDoseAmount());
+        medication.setDoseUnit(request.getDoseUnit());
         medication.setActiveIngredients(request.getActiveIngredients());
         medication.setPharmaceuticalForm(request.getPharmaceuticalForm());
         medication.setAdministrationRoute(request.getAdministrationRoute());
@@ -136,6 +140,8 @@ public class MedicationService {
         if (medication.getSchedule() != null) {
             scheduleService.cancel(medication.getSchedule());
         }
+        medication.setActive(false);
+        medicationRepository.save(medication);
     }
 
     private void assertCanAccessUser(Long targetUserId) {

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/core/state/medication_provider.dart';
 import 'package:frontend/core/state/user_provider.dart';
@@ -7,6 +8,8 @@ import 'package:frontend/core/state/member_provider.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/features/medication/screens/medication_list_screen.dart';
 import 'package:frontend/features/models/medication_model.dart';
+import 'package:frontend/features/models/extracted_medication_model.dart';
+import 'package:frontend/features/service/medication_service.dart';
 import 'package:frontend/core/utils/input_utils.dart';
 import 'package:frontend/shared/widgets/index.dart';
 import 'package:image_picker/image_picker.dart';
@@ -29,6 +32,8 @@ class CreateMedicationScreen extends StatefulWidget {
 class _MedicationFormData {
   final nameController = TextEditingController();
   final dosageController = TextEditingController();
+  final doseAmountController = TextEditingController();
+  final doseUnitController = TextEditingController();
   final activeIngredientsController = TextEditingController();
   final administrationRouteController = TextEditingController();
   final pharmaceuticalFormController = TextEditingController();
@@ -44,9 +49,14 @@ class _MedicationFormData {
   String? medicationImageBase64;
   bool acquisitionConfirmed = false;
 
+  bool needsManualIntervalReview = false;
+  bool needsManualDosageReview = false;
+
   void dispose() {
     nameController.dispose();
     dosageController.dispose();
+    doseAmountController.dispose();
+    doseUnitController.dispose();
     activeIngredientsController.dispose();
     administrationRouteController.dispose();
     pharmaceuticalFormController.dispose();
@@ -57,8 +67,10 @@ class _MedicationFormData {
 
 class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
   final List<_MedicationFormData> _forms = [_MedicationFormData()];
+  final MedicationService _medicationService = MedicationService();
   int? _selectedTargetUserId;
   bool _isLoading = false;
+  bool _isScanning = false;
   bool _showAdvanced = false;
   final _picker = ImagePicker();
 
@@ -81,6 +93,8 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
     final form = _forms.first;
     form.nameController.text = med.name;
     form.dosageController.text = med.dosage;
+    form.doseAmountController.text = _formatDoseAmount(med.doseAmount);
+    form.doseUnitController.text = med.doseUnit;
     form.activeIngredientsController.text = med.activeIngredients ?? '';
     form.administrationRouteController.text = med.administrationRoute ?? '';
     form.pharmaceuticalFormController.text = med.pharmaceuticalForm ?? '';
@@ -113,6 +127,12 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
         form.activeIngredientsController.text.isNotEmpty ||
         form.administrationRouteController.text.isNotEmpty ||
         form.pharmaceuticalFormController.text.isNotEmpty;
+  }
+
+  String _formatDoseAmount(double value) {
+    return value == value.roundToDouble()
+        ? value.toInt().toString()
+        : value.toString();
   }
 
   Future<void> _pickImage(int index) async {
@@ -194,11 +214,177 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
     if (picked != null) setState(() => _forms[index].endDate = picked);
   }
 
+  Future<void> _scanPrescription() async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.lightGrey,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+              title: const Text('Câmera'),
+              onTap: () => Navigator.pop(context, 'camera'),
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.photo_library,
+                color: AppColors.primary,
+              ),
+              title: const Text('Galeria'),
+              onTap: () => Navigator.pop(context, 'gallery'),
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.picture_as_pdf,
+                color: AppColors.primary,
+              ),
+              title: const Text('Arquivo PDF'),
+              onTap: () => Navigator.pop(context, 'pdf'),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (choice == null) return;
+
+    Uint8List? bytes;
+    String? fileName;
+    String? mimeType;
+
+    if (choice == 'pdf') {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+        withData: true,
+      );
+      if (result == null || result.files.single.bytes == null) return;
+
+      bytes = result.files.single.bytes;
+      fileName = result.files.single.name;
+      mimeType = 'application/pdf';
+    } else {
+      final source = choice == 'camera'
+          ? ImageSource.camera
+          : ImageSource.gallery;
+      final picked = await _picker.pickImage(source: source, imageQuality: 85);
+      if (picked == null) return;
+
+      bytes = await picked.readAsBytes();
+      fileName = picked.name;
+      mimeType = picked.name.toLowerCase().endsWith('.png')
+          ? 'image/png'
+          : 'image/jpeg';
+    }
+
+    setState(() => _isScanning = true);
+    try {
+      final extracted = await _medicationService.extractFromPrescription(
+        bytes!,
+        fileName!,
+        mimeType!,
+      );
+
+      if (extracted.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Não foi possível identificar medicamentos na receita.',
+              ),
+            ),
+          );
+        }
+        return;
+      }
+
+      _populateFormsFromExtraction(extracted);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isScanning = false);
+    }
+  }
+
+  void _populateFormsFromExtraction(List<ExtractedMedicationModel> extracted) {
+    for (final f in _forms) {
+      f.dispose();
+    }
+
+    final newForms = extracted.map((e) {
+      final form = _MedicationFormData();
+      form.nameController.text = e.name ?? '';
+      form.dosageController.text = e.dosage ?? '';
+      form.doseAmountController.text = e.doseAmount != null
+          ? _formatDoseAmount(e.doseAmount!)
+          : '';
+      form.doseUnitController.text = e.doseUnit ?? '';
+      form.activeIngredientsController.text = e.activeIngredients ?? '';
+      form.administrationRouteController.text = e.administrationRoute ?? '';
+      form.pharmaceuticalFormController.text = e.pharmaceuticalForm ?? '';
+
+      if (!e.requiresManualInterval && e.doseInterval != null) {
+        form.selectedInterval = e.doseInterval!;
+      }
+      form.needsManualIntervalReview = e.requiresManualInterval;
+      form.needsManualDosageReview = e.requiresManualDosage;
+
+      final days = e.parsedTreatmentDurationDays;
+      if (days != null) {
+        form.durationType = 'DAYS';
+        form.durationController.text = days.toString();
+      }
+
+      return form;
+    }).toList();
+
+    setState(() {
+      _forms
+        ..clear()
+        ..addAll(newForms);
+      _showAdvanced = true;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '${newForms.length} medicamento(s) identificado(s). Revise os campos destacados antes de cadastrar.',
+        ),
+      ),
+    );
+  }
+
   Map<String, dynamic> _buildPayload(_MedicationFormData form) {
     return {
       'name': form.nameController.text.trim(),
       'dosage': form.dosageController.text.trim(),
       'doseInterval': form.selectedInterval,
+      'doseAmount': double.tryParse(
+        form.doseAmountController.text.replaceAll(',', '.'),
+      ),
+      'doseUnit': form.doseUnitController.text.trim(),
       if (form.activeIngredientsController.text.isNotEmpty)
         'activeIngredients': form.activeIngredientsController.text.trim(),
       if (form.administrationRouteController.text.isNotEmpty)
@@ -234,11 +420,20 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
 
   Future<void> _submit() async {
     for (final form in _forms) {
+      final doseAmountValid =
+          double.tryParse(
+            form.doseAmountController.text.replaceAll(',', '.'),
+          ) !=
+          null;
       if (form.nameController.text.isEmpty ||
-          form.dosageController.text.isEmpty) {
+          form.dosageController.text.isEmpty ||
+          !doseAmountValid ||
+          form.doseUnitController.text.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Nome e dosagem são obrigatórios em todos os itens'),
+            content: Text(
+              'Nome, dosagem, quantidade por dose e unidade são obrigatórios em todos os itens',
+            ),
           ),
         );
         return;
@@ -313,23 +508,28 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            OutlinedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Funcionalidade em breve!')),
-                );
-              },
-              icon: const Icon(Icons.document_scanner),
-              label: const Text('Escanear receita'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: const BorderSide(color: AppColors.primary),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            if (!_isEdit)
+              OutlinedButton.icon(
+                onPressed: _isScanning ? null : _scanPrescription,
+                icon: _isScanning
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.document_scanner),
+                label: Text(
+                  _isScanning ? 'Analisando receita...' : 'Escanear receita',
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: const BorderSide(color: AppColors.primary),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
-            ),
             SizedBox(height: height * 0.03),
 
             if (userProvider.isMaster && memberProvider.members.isNotEmpty) ...[
@@ -372,9 +572,39 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
               ),
               SizedBox(height: height * 0.015),
               CustomTextField(
-                label: 'Dosagem* (ex: 500mg, 1 comprimido)',
+                label: 'Dosagem* (concentração, ex: 500mg)',
                 controller: _forms[i].dosageController,
                 keyboardType: TextInputType.text,
+              ),
+              if (_forms[i].needsManualDosageReview) ...[
+                const SizedBox(height: 4),
+                const _ReviewHint(
+                  text:
+                      'Não identificado na receita — confirme ou preencha manualmente.',
+                ),
+              ],
+              SizedBox(height: height * 0.015),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Quantidade por dose*',
+                      controller: _forms[i].doseAmountController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Unidade* (cp, ml, jato...)',
+                      controller: _forms[i].doseUnitController,
+                      keyboardType: TextInputType.text,
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: height * 0.015),
 
@@ -390,34 +620,72 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
                       ),
                     )
                     .toList(),
-                onChanged: (v) =>
-                    setState(() => _forms[i].selectedInterval = v as String),
+                onChanged: (v) => setState(() {
+                  _forms[i].selectedInterval = v as String;
+                  _forms[i].needsManualIntervalReview = false;
+                }),
               ),
+              if (_forms[i].needsManualIntervalReview) ...[
+                const SizedBox(height: 4),
+                const _ReviewHint(
+                  text:
+                      'Intervalo não reconhecido automaticamente (RN001) — confirme o valor correto.',
+                ),
+              ],
               SizedBox(height: height * 0.02),
 
               SectionTitle(title: 'Agendamento'),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Checkbox(
-                    value: _forms[i].acquisitionConfirmed,
-                    onChanged: widget.confirmAcquisitionMode
+                  GestureDetector(
+                    onTap: widget.confirmAcquisitionMode
                         ? null
-                        : (v) => setState(
-                            () => _forms[i].acquisitionConfirmed = v ?? false,
+                        : () => setState(
+                            () => _forms[i].acquisitionConfirmed =
+                                !_forms[i].acquisitionConfirmed,
                           ),
-                    activeColor: AppColors.primary,
-                    side: const BorderSide(
-                      color: AppColors.secondary,
-                      width: 1.5,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 52,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                        color: _forms[i].acquisitionConfirmed
+                            ? AppColors.primary
+                            : AppColors.secondary.withValues(alpha: 0.2),
+                      ),
+                      child: AnimatedAlign(
+                        duration: const Duration(milliseconds: 200),
+                        alignment: _forms[i].acquisitionConfirmed
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.all(3),
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 12),
                   const Text(
                     'Já tenho este medicamento',
                     style: TextStyle(color: AppColors.secondary, fontSize: 14),
                   ),
                 ],
               ),
+              SizedBox(height: height * 0.02),
 
               if (_forms[i].acquisitionConfirmed) ...[
                 const SizedBox(height: 8),
@@ -445,45 +713,46 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
                   ],
                 ),
                 SizedBox(height: height * 0.02),
-                SectionTitle(title: 'Término do tratamento'),
-                const SizedBox(height: 8),
-                DropdownField(
-                  value: _forms[i].durationType,
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'DAYS',
-                      child: Text('Por quantidade de dias'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'DATE',
-                      child: Text('Até uma data específica'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'CONTINUOUS',
-                      child: Text('Uso contínuo (Sem data final)'),
-                    ),
-                  ],
-                  onChanged: (v) =>
-                      setState(() => _forms[i].durationType = v as String),
+              ],
+
+              SectionTitle(title: 'Término do tratamento'),
+              const SizedBox(height: 8),
+              DropdownField(
+                value: _forms[i].durationType,
+                items: const [
+                  DropdownMenuItem(
+                    value: 'DAYS',
+                    child: Text('Por quantidade de dias'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'DATE',
+                    child: Text('Até uma data específica'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'CONTINUOUS',
+                    child: Text('Uso contínuo (Sem data final)'),
+                  ),
+                ],
+                onChanged: (v) =>
+                    setState(() => _forms[i].durationType = v as String),
+              ),
+              if (_forms[i].durationType == 'DAYS') ...[
+                SizedBox(height: height * 0.015),
+                CustomTextField(
+                  label: 'Duração do tratamento (dias)',
+                  controller: _forms[i].durationController,
+                  keyboardType: TextInputType.number,
                 ),
-                if (_forms[i].durationType == 'DAYS') ...[
-                  SizedBox(height: height * 0.015),
-                  CustomTextField(
-                    label: 'Duração do tratamento (dias)',
-                    controller: _forms[i].durationController,
-                    keyboardType: TextInputType.number,
-                  ),
-                ],
-                if (_forms[i].durationType == 'DATE') ...[
-                  SizedBox(height: height * 0.015),
-                  DateTimeButton(
-                    icon: Icons.event,
-                    label: _forms[i].endDate != null
-                        ? 'Fim: ${_forms[i].endDate!.day.toString().padLeft(2, '0')}/${_forms[i].endDate!.month.toString().padLeft(2, '0')}/${_forms[i].endDate!.year}'
-                        : 'Selecionar data final',
-                    onTap: () => _pickEndDate(i),
-                  ),
-                ],
+              ],
+              if (_forms[i].durationType == 'DATE') ...[
+                SizedBox(height: height * 0.015),
+                DateTimeButton(
+                  icon: Icons.event,
+                  label: _forms[i].endDate != null
+                      ? 'Fim: ${_forms[i].endDate!.day.toString().padLeft(2, '0')}/${_forms[i].endDate!.month.toString().padLeft(2, '0')}/${_forms[i].endDate!.year}'
+                      : 'Selecionar data final',
+                  onTap: () => _pickEndDate(i),
+                ),
               ],
               SizedBox(height: height * 0.02),
 
@@ -576,6 +845,28 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ReviewHint extends StatelessWidget {
+  const _ReviewHint({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(Icons.warning_amber_rounded, size: 16, color: Colors.orange),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 12, color: Colors.orange),
+          ),
+        ),
+      ],
     );
   }
 }

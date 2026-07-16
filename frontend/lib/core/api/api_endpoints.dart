@@ -31,6 +31,7 @@ class ApiEndpoints {
       '/medications/$id/confirm-acquisition';
   static String endTreatment(int id) => '/medications/$id/end-treatment';
   static String medicationsByUser(int userId) => '/medications?userId=$userId';
+  static const String extractMedication = '/medications/extract';
 
   static const String scheduleToday = '/schedule/today';
   static const String scheduleDoses = '/schedule/doses';

@@ -7,6 +7,7 @@ import 'package:frontend/core/state/schedule_provider.dart';
 import 'package:frontend/features/alarm/screen/alarm_screen.dart';
 import 'package:frontend/features/service/alarm_service.dart';
 import 'package:frontend/features/service/notification_service.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routing/routes.dart';
@@ -17,6 +18,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('pt_BR', null);
   await AlarmService.initialize();
   await NotificationService.initialize();
   runApp(const MyApp());

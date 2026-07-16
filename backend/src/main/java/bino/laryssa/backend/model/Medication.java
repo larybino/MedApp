@@ -34,7 +34,10 @@ public class Medication  {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private DoseInterval doseInterval;
-    
+    @Column(nullable = false)
+    private Double doseAmount;
+    @Column(nullable = false)
+    private String doseUnit;
     @Column(columnDefinition = "LONGTEXT")
     private String medicationImage;
     private boolean acquisitionConfirmed = false;
@@ -56,6 +59,9 @@ public class Medication  {
     @Column(nullable = false)
     private int stockQuantity;
     private int currentStock;
+
+    @Column(nullable = false)
+    private boolean active = true;
 
     @PrePersist
     protected void onCreate() {
