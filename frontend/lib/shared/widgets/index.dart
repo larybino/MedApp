@@ -19,3 +19,4 @@ export 'app_button.dart';
 export 'app_chip.dart';
 export 'history_card.dart';
 export 'dose_badge.dart';
+export 'toggle_row.dart';

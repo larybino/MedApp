@@ -146,6 +146,10 @@ class NotificationService {
     }
   }
 
+  static Future<void> cancelAll() async {
+    await _plugin.cancelAll();
+  }
+
   static int _getIntervalHours(String doseInterval) {
     switch (doseInterval) {
       case 'FOUR_HOURS':

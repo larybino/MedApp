@@ -12,9 +12,9 @@ class BottomNavHandler {
       case 1:
         context.go(Routes.medications);
         break;
-      
+
       case 2:
-        context.go(Routes.createMedication);
+        context.push(Routes.createMedication);
         break;
 
       case 3:

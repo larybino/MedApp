@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/shared/widgets/index.dart';
 import 'package:provider/provider.dart';
 import '../../../core/state/user_provider.dart';
 import '../../../core/storage/notification_preferences.dart';
@@ -15,6 +16,7 @@ class NotificationSettingsScreen extends StatefulWidget {
 class _NotificationSettingsScreenState
     extends State<NotificationSettingsScreen> {
   bool _onlyMyDoses = true;
+  bool _notificationsEnabled = true;
   bool _loading = true;
 
   @override
@@ -24,16 +26,23 @@ class _NotificationSettingsScreenState
   }
 
   Future<void> _load() async {
-    final value = await NotificationPreferences.getOnlyMyDoses();
+    final enabled = await NotificationPreferences.getNotificationsEnabled();
+    final onlyMine = await NotificationPreferences.getOnlyMyDoses();
     if (mounted) {
       setState(() {
-        _onlyMyDoses = value;
+        _notificationsEnabled = enabled;
+        _onlyMyDoses = onlyMine;
         _loading = false;
       });
     }
   }
 
-  Future<void> _onChanged(bool value) async {
+  Future<void> _onToggleEnabled(bool value) async {
+    setState(() => _notificationsEnabled = value);
+    await NotificationPreferences.setNotificationsEnabled(value);
+  }
+
+  Future<void> _onToggleOnlyMine(bool value) async {
     setState(() => _onlyMyDoses = value);
     await NotificationPreferences.setOnlyMyDoses(value);
   }
@@ -79,6 +88,23 @@ class _NotificationSettingsScreenState
                     ],
                   ),
                 ),
+                const SizedBox(height: 16),
+                Card(
+                  color: AppColors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: ToggleRow(
+                      title: 'Receber notificações',
+                      subtitle:
+                          'Ativa lembretes de dose e alertas de estoque baixo neste aparelho',
+                      value: _notificationsEnabled,
+                      onChanged: _onToggleEnabled,
+                    ),
+                  ),
+                ),
                 if (isMaster) ...[
                   const SizedBox(height: 16),
                   Card(
@@ -88,75 +114,19 @@ class _NotificationSettingsScreenState
                         horizontal: 16,
                         vertical: 12,
                       ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Notificar apenas minhas doses',
-                                  style: TextStyle(
-                                    color: AppColors.secondary,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Quando desativado, você também recebe notificações '
-                                  'dos perfis vinculados a você',
-                                  style: TextStyle(
-                                    color: AppColors.secondary.withValues(
-                                      alpha: 0.6,
-                                    ),
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
+                      child: Opacity(
+                        opacity: _notificationsEnabled ? 1.0 : 0.4,
+                        child: IgnorePointer(
+                          ignoring: !_notificationsEnabled,
+                          child: ToggleRow(
+                            title: 'Notificar apenas minhas doses',
+                            subtitle:
+                                'Quando desativado, você também recebe notificações '
+                                'dos perfis vinculados a você',
+                            value: _onlyMyDoses,
+                            onChanged: _onToggleOnlyMine,
                           ),
-                          const SizedBox(width: 12),
-                          GestureDetector(
-                            onTap: () => _onChanged(!_onlyMyDoses),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              width: 52,
-                              height: 30,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
-                                color: _onlyMyDoses
-                                    ? AppColors.primary
-                                    : AppColors.secondary.withValues(
-                                        alpha: 0.2,
-                                      ),
-                              ),
-                              child: AnimatedAlign(
-                                duration: const Duration(milliseconds: 200),
-                                alignment: _onlyMyDoses
-                                    ? Alignment.centerRight
-                                    : Alignment.centerLeft,
-                                child: Container(
-                                  margin: const EdgeInsets.all(3),
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.1,
-                                        ),
-                                        blurRadius: 4,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),

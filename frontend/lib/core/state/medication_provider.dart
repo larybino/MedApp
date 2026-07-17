@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/storage/notification_preferences.dart';
 import 'package:frontend/features/models/medication_model.dart';
 import 'package:frontend/features/service/medication_service.dart';
 import 'package:frontend/features/service/notification_service.dart';
@@ -32,6 +33,9 @@ class MedicationProvider extends ChangeNotifier {
   }
 
   Future<void> checkLowStockAlerts() async {
+    final enabled = await NotificationPreferences.getNotificationsEnabled();
+    if (!enabled) return;
+
     for (final med in _medications) {
       await NotificationService.checkAndNotifyLowStock(med);
     }

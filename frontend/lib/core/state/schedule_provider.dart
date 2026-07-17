@@ -66,6 +66,13 @@ class ScheduleProvider extends ChangeNotifier {
     required bool isMaster,
     required List<int> memberIds,
   }) async {
+    final enabled = await NotificationPreferences.getNotificationsEnabled();
+    if (!enabled) {
+      await NotificationService.cancelAll();
+      await AlarmService.cancelAllAlarms();
+      return;
+    }
+
     final targetId = await SecureStorage.getUserId();
     if (targetId == null) return;
 
