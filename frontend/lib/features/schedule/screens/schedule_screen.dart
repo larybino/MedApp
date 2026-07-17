@@ -20,22 +20,45 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   DateTime _focusedDay = DateTime.now();
   int? _selectedMemberId;
 
+  String get _selectedDateParam =>
+      '${_selectedDay.year}-${_selectedDay.month.toString().padLeft(2, '0')}-${_selectedDay.day.toString().padLeft(2, '0')}';
+
+  Future<void> _initializeScreen() async {
+    final userProvider = context.read<UserProvider>();
+    await userProvider.loadUser();
+    await _reload();
+
+    if (userProvider.isMaster) {
+      await context.read<MemberProvider>().loadMembers();
+    }
+  }
+
+  Future<void> _onRefresh() async {
+    await _reload();
+    if (context.read<UserProvider>().isMaster) {
+      await context.read<MemberProvider>().loadMembers();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _reload();
-      if (context.read<UserProvider>().isMaster) {
-        await context.read<MemberProvider>().loadMembers();
+      try {
+        await _initializeScreen();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          );
+        }
       }
     });
   }
 
   Future<void> _reload() async {
-    final date =
-        '${_selectedDay.year}-${_selectedDay.month.toString().padLeft(2, '0')}-${_selectedDay.day.toString().padLeft(2, '0')}';
     await context.read<ScheduleProvider>().loadDosesByDate(
-      date,
+      _selectedDateParam,
       userId: _selectedMemberId,
     );
   }
@@ -64,7 +87,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
     if (confirmed == true && mounted) {
       try {
-        await context.read<ScheduleProvider>().confirmDose(doseId);
+        await context.read<ScheduleProvider>().confirmDose(
+          doseId,
+          userId: _selectedMemberId,
+          date: _selectedDateParam,
+        );
         if (mounted) {
           ScaffoldMessenger.of(
             context,
@@ -269,43 +296,56 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           Expanded(
             child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : provider.doses.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.event_available_outlined,
-                          size: 64,
-                          color: AppColors.secondary.withValues(alpha: 0.3),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Nenhuma dose para este dia',
-                          style: TextStyle(
-                            color: AppColors.secondary.withValues(alpha: 0.6),
-                            fontSize: 16,
+                : RefreshIndicator(
+                    onRefresh: _onRefresh,
+                    child: provider.doses.isEmpty
+                        ? ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            children: [
+                              const SizedBox(height: 120),
+                              Icon(
+                                Icons.event_available_outlined,
+                                size: 64,
+                                color: AppColors.secondary.withValues(
+                                  alpha: 0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Nenhuma dose para este dia',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: AppColors.secondary.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          )
+                        : ListView.separated(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.all(16),
+                            itemCount: provider.doses.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 10),
+                            itemBuilder: (context, index) {
+                              final dose = provider.doses[index];
+                              return ScheduleDoseCard(
+                                dose: dose,
+                                formattedTime: _formatTime(dose.scheduledTime),
+                                onToggle:
+                                    (dose.doseStatus == 'PENDING' ||
+                                        dose.doseStatus == 'MISSED')
+                                    ? () => _confirmDose(
+                                        dose.id,
+                                        dose.medicationName,
+                                      )
+                                    : null,
+                              );
+                            },
                           ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: provider.doses.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final dose = provider.doses[index];
-                      return ScheduleDoseCard(
-                        dose: dose,
-                        formattedTime: _formatTime(dose.scheduledTime),
-                        onToggle:
-                            (dose.doseStatus == 'PENDING' ||
-                                dose.doseStatus == 'MISSED')
-                            ? () => _confirmDose(dose.id, dose.medicationName)
-                            : null,
-                      );
-                    },
                   ),
           ),
         ],

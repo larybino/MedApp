@@ -17,23 +17,51 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int? _selectedMemberId;
 
+  Future<void> _initializeScreen() async {
+    final userProvider = context.read<UserProvider>();
+    final memberProvider = context.read<MemberProvider>();
+
+    await userProvider.loadUser();
+    await _reload();
+
+    if (userProvider.isMaster) {
+      await memberProvider.loadMembers();
+    }
+
+    await context.read<ScheduleProvider>().syncNotifications(
+      isMaster: userProvider.isMaster,
+      memberIds: memberProvider.members.map((m) => m.id).toList(),
+    );
+  }
+
+  Future<void> _onRefresh() async {
+    await _reload();
+
+    final userProvider = context.read<UserProvider>();
+    if (userProvider.isMaster) {
+      await context.read<MemberProvider>().loadMembers();
+    }
+
+    final memberProvider = context.read<MemberProvider>();
+    await context.read<ScheduleProvider>().syncNotifications(
+      isMaster: userProvider.isMaster,
+      memberIds: memberProvider.members.map((m) => m.id).toList(),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _reload();
-
-      final userProvider = context.read<UserProvider>();
-      if (userProvider.isMaster) {
-        await context.read<MemberProvider>().loadMembers();
+      try {
+        await _initializeScreen();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          );
+        }
       }
-
-      if (!mounted) return;
-      final memberProvider = context.read<MemberProvider>();
-      await context.read<ScheduleProvider>().syncNotifications(
-        isMaster: userProvider.isMaster,
-        memberIds: memberProvider.members.map((m) => m.id).toList(),
-      );
     });
   }
 
@@ -78,7 +106,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (confirmed == true && mounted) {
       try {
-        await context.read<ScheduleProvider>().confirmDose(doseId);
+        await context.read<ScheduleProvider>().confirmDose(
+          doseId,
+          userId: _selectedMemberId,
+        );
         if (mounted) {
           ScaffoldMessenger.of(
             context,
@@ -204,43 +235,56 @@ class _HomeScreenState extends State<HomeScreen> {
           Expanded(
             child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : provider.doses.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.check_circle_outline,
-                          size: 64,
-                          color: AppColors.secondary.withValues(alpha: 0.3),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Nenhum medicamento para hoje',
-                          style: TextStyle(
-                            color: AppColors.secondary.withValues(alpha: 0.6),
-                            fontSize: 16,
+                : RefreshIndicator(
+                    onRefresh: _onRefresh,
+                    child: provider.doses.isEmpty
+                        ? ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            children: [
+                              const SizedBox(height: 120),
+                              Icon(
+                                Icons.check_circle_outline,
+                                size: 64,
+                                color: AppColors.secondary.withValues(
+                                  alpha: 0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Nenhum medicamento para hoje',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: AppColors.secondary.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          )
+                        : ListView.separated(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.all(16),
+                            itemCount: provider.doses.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 10),
+                            itemBuilder: (context, index) {
+                              final dose = provider.doses[index];
+                              return DoseCard(
+                                dose: dose,
+                                formattedTime: _formatTime(dose.scheduledTime),
+                                onConfirm:
+                                    (dose.doseStatus == 'PENDING' ||
+                                        dose.doseStatus == 'MISSED')
+                                    ? () => _confirmDose(
+                                        dose.id,
+                                        dose.medicationName,
+                                      )
+                                    : null,
+                              );
+                            },
                           ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: provider.doses.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final dose = provider.doses[index];
-                      return DoseCard(
-                        dose: dose,
-                        formattedTime: _formatTime(dose.scheduledTime),
-                        onConfirm:
-                            (dose.doseStatus == 'PENDING' ||
-                                dose.doseStatus == 'MISSED')
-                            ? () => _confirmDose(dose.id, dose.medicationName)
-                            : null,
-                      );
-                    },
                   ),
           ),
         ],

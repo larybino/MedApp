@@ -45,18 +45,10 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    print('APP INICIADO');
-
     _requestPermissions();
 
     Alarm.ringing.listen((alarmSet) {
-      print('ALARME RECEBIDO');
-      print('Quantidade: ${alarmSet.alarms.length}');
-      print('Navigator: ${navigatorKey.currentState}');
-
       for (final alarm in alarmSet.alarms) {
-        print('Alarme ID: ${alarm.id}');
-
         navigatorKey.currentState?.push(
           MaterialPageRoute(
             fullscreenDialog: true,

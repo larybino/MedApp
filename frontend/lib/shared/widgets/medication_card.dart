@@ -25,6 +25,12 @@ class MedicationCard extends StatelessWidget {
     required this.onRestock,
   });
 
+  String _formatNumber(double value) {
+    return value == value.roundToDouble()
+        ? value.toInt().toString()
+        : value.toString();
+  }
+
   String _statusLabel() {
     switch (medication.scheduleStatus) {
       case 'ACTIVE':
@@ -159,7 +165,8 @@ class MedicationCard extends StatelessWidget {
                 if (medication.currentStock != null)
                   AppChip(
                     icon: Icons.inventory_2_outlined,
-                    label: 'Estoque: ${medication.currentStock}',
+                    label:
+                        'Estoque: ${_formatNumber(medication.currentStock!)}',
                     color: medication.currentStock! <= 5
                         ? Colors.orange
                         : AppColors.secondary,

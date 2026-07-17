@@ -32,7 +32,6 @@ public class MedicationExtractionService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // RN007: apenas JPG, PNG ou PDF são aceitos
     private static final Set<String> ALLOWED_MIME_TYPES = Set.of(
             "application/pdf", "image/jpeg", "image/png"
     );

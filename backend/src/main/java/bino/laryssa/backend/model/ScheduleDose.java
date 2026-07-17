@@ -35,7 +35,7 @@ public class ScheduleDose {
     private LocalTime scheduledTime; 
     private LocalDateTime confirmedAt;
     @Column(nullable = false)
-    private int confirmationWindowMinutes =180;
+    private int confirmationWindowMinutes = 120;
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private DoseStatus doseStatus;
@@ -58,7 +58,9 @@ public class ScheduleDose {
 
     public boolean isWithinConfirmationWindow() {
         LocalDateTime scheduled = LocalDateTime.of(scheduledDate, scheduledTime);
+        LocalDateTime windowStart = scheduled.minusMinutes(confirmationWindowMinutes);
         LocalDateTime windowEnd = scheduled.plusMinutes(confirmationWindowMinutes);
-        return LocalDateTime.now().isBefore(windowEnd);
+        LocalDateTime now = LocalDateTime.now();
+        return !now.isBefore(windowStart) && now.isBefore(windowEnd);
     }
 }
