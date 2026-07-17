@@ -57,8 +57,8 @@ public class Medication  {
     private Schedule schedule;
     private LocalTime startTime;
     @Column(nullable = false)
-    private int stockQuantity;
-    private int currentStock;
+    private Double stockQuantity;
+    private Double currentStock;
 
     @Column(nullable = false)
     private boolean active = true;

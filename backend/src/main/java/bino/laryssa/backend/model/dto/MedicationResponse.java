@@ -29,8 +29,8 @@ public class MedicationResponse {
     private int treatmentDurationDays;
     private ScheduleStatus scheduleStatus;
 
-    private int stockQuantity;
-    private int currentStock;
+    private Double stockQuantity;
+    private Double currentStock;
     private boolean acquisitionConfirmed;
     private String medicationImage;
     private Long userId;

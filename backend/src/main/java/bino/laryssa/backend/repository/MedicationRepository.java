@@ -12,6 +12,6 @@ public interface MedicationRepository extends JpaRepository<Medication, Long> {
     List<Medication> findByUserIdAndSchedule_ScheduleStatusNotAndActiveTrue(Long userId, ScheduleStatus scheduleStatus);
     List<Medication> findByUserIdAndSchedule_ScheduleStatus(Long userId, ScheduleStatus scheduleStatus);
     Optional<Medication> findByIdAndUserId(Long id, Long userId);
-    List<Medication> findByUserIdAndCurrentStockLessThanEqual(Long userId, Integer currentStock);
+    List<Medication> findByUserIdAndCurrentStockLessThanEqual(Long userId, Double currentStock);
     List<Medication> findByUserIdAndScheduleIsNullAndActiveTrue(Long userId);
 }

@@ -103,8 +103,10 @@ public class ScheduleService {
         scheduleDoseRepository.save(dose);
         
         Medication medication = dose.getSchedule().getMedication();
-        if (medication.getCurrentStock() > 0) {
-            medication.setCurrentStock(medication.getCurrentStock() - 1);
+        double amountToDecrement = medication.getDoseAmount() != null ? medication.getDoseAmount() : 1.0;
+        if (medication.getCurrentStock() != null && medication.getCurrentStock() > 0) {
+            double newStock = medication.getCurrentStock() - amountToDecrement;
+            medication.setCurrentStock(Math.max(newStock, 0.0));
             medicationRepository.save(medication);
         }
 

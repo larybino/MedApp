@@ -32,7 +32,7 @@ public class MedicationRequest {
     private LocalTime startTime;
     private int treatmentDurationDays;
     @NotNull(message = "A quantidade de estoque e obrigatória")
-    private int stockQuantity;
-    private int currentStock;
+    private Double stockQuantity;
+    private Double currentStock;
     private Long userId;
 }

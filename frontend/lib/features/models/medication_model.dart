@@ -13,8 +13,8 @@ class MedicationModel {
   final String? pharmaceuticalForm;
   final String? administrationRoute;
   final String? startTime;
-  final int? stockQuantity;
-  final int? currentStock;
+  final double? stockQuantity;
+  final double? currentStock;
   final int userId;
 
   final int? scheduleId;
@@ -61,8 +61,8 @@ class MedicationModel {
       startTime: json['startTime'],
       endDate: json['endDate'],
       treatmentDurationDays: json['treatmentDurationDays'],
-      stockQuantity: json['stockQuantity'],
-      currentStock: json['currentStock'],
+      stockQuantity: (json['stockQuantity'] as num?)?.toDouble(),
+      currentStock: (json['currentStock'] as num?)?.toDouble(),
       acquisitionConfirmed: json['acquisitionConfirmed'] ?? false,
       medicationImage: json['medicationImage'],
       userId: json['userId'],

@@ -99,7 +99,9 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
     form.administrationRouteController.text = med.administrationRoute ?? '';
     form.pharmaceuticalFormController.text = med.pharmaceuticalForm ?? '';
     form.durationController.text = med.treatmentDurationDays?.toString() ?? '';
-    form.stockController.text = med.stockQuantity?.toString() ?? '';
+    form.stockController.text = med.stockQuantity != null
+        ? _formatDoseAmount(med.stockQuantity!)
+        : '';
     form.selectedInterval = med.doseInterval;
     form.startDate = InputUtils.parseIsoDate(med.startDate);
     form.endDate = InputUtils.parseIsoDate(med.endDate);
@@ -296,8 +298,8 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
     try {
       final extracted = await _medicationService.extractFromPrescription(
         bytes!,
-        fileName!,
-        mimeType!,
+        fileName,
+        mimeType,
       );
 
       if (extracted.isEmpty) {
@@ -404,7 +406,9 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
         'startTime':
             '${form.startTime!.hour.toString().padLeft(2, '0')}:${form.startTime!.minute.toString().padLeft(2, '0')}:00',
       if (form.stockController.text.isNotEmpty)
-        'stockQuantity': int.tryParse(form.stockController.text),
+        'stockQuantity': double.tryParse(
+          form.stockController.text.replaceAll(',', '.'),
+        ),
       if (_selectedTargetUserId != null) 'userId': _selectedTargetUserId,
       'acquisitionConfirmed': form.acquisitionConfirmed,
     };
@@ -425,14 +429,20 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
             form.doseAmountController.text.replaceAll(',', '.'),
           ) !=
           null;
+      final stockValid =
+          form.stockController.text.isNotEmpty &&
+          double.tryParse(form.stockController.text.replaceAll(',', '.')) !=
+              null;
       if (form.nameController.text.isEmpty ||
           form.dosageController.text.isEmpty ||
           !doseAmountValid ||
-          form.doseUnitController.text.isEmpty) {
+          form.doseUnitController.text.isEmpty ||
+          !stockValid) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'Nome, dosagem, quantidade por dose e unidade são obrigatórios em todos os itens',
+              'Nome, dosagem, quantidade por dose, unidade e '
+              'quantidade em estoque são obrigatórios em todos os itens',
             ),
           ),
         );
@@ -523,6 +533,7 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
                 ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
+                  disabledForegroundColor: AppColors.primary,
                   side: const BorderSide(color: AppColors.primary),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -531,6 +542,9 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
                 ),
               ),
             SizedBox(height: height * 0.03),
+
+            const _RequiredFieldsNote(),
+            SizedBox(height: height * 0.02),
 
             if (userProvider.isMaster && memberProvider.members.isNotEmpty) ...[
               SectionTitle(title: 'Para quem é este medicamento?'),
@@ -566,13 +580,13 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
               SectionTitle(title: 'Dados principais'),
               const SizedBox(height: 8),
               CustomTextField(
-                label: 'Nome do medicamento*',
+                label: 'Nome do medicamento *',
                 controller: _forms[i].nameController,
                 keyboardType: TextInputType.text,
               ),
               SizedBox(height: height * 0.015),
               CustomTextField(
-                label: 'Dosagem* (concentração, ex: 500mg)',
+                label: 'Dosagem * (concentração, ex: 500mg)',
                 controller: _forms[i].dosageController,
                 keyboardType: TextInputType.text,
               ),
@@ -589,7 +603,7 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
                 children: [
                   Expanded(
                     child: CustomTextField(
-                      label: 'Quantidade por dose*',
+                      label: 'Quantidade por dose *',
                       controller: _forms[i].doseAmountController,
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
@@ -599,7 +613,7 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: CustomTextField(
-                      label: 'Unidade* (cp, ml, jato...)',
+                      label: 'Unidade * (cp, ml, gota, jato...)',
                       controller: _forms[i].doseUnitController,
                       keyboardType: TextInputType.text,
                     ),
@@ -608,7 +622,7 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
               ),
               SizedBox(height: height * 0.015),
 
-              SectionTitle(title: 'Frequência*'),
+              SectionTitle(title: 'Frequência *'),
               const SizedBox(height: 8),
               DropdownField(
                 value: _forms[i].selectedInterval,
@@ -759,9 +773,20 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
               SectionTitle(title: 'Estoque'),
               const SizedBox(height: 8),
               CustomTextField(
-                label: 'Quantidade inicial*',
+                label: 'Quantidade inicial * (mesma unidade da dose)',
                 controller: _forms[i].stockController,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Ex: se a dose é em gotas, informe o total de gotas do '
+                'frasco; se for em ml ou g, informe o total em ml ou g.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.secondary.withValues(alpha: 0.6),
+                ),
               ),
               SizedBox(height: height * 0.02),
 
@@ -867,6 +892,22 @@ class _ReviewHint extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _RequiredFieldsNote extends StatelessWidget {
+  const _RequiredFieldsNote();
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      '* Campos obrigatórios',
+      style: TextStyle(
+        fontSize: 12,
+        fontStyle: FontStyle.italic,
+        color: AppColors.secondary.withValues(alpha: 0.6),
+      ),
     );
   }
 }
