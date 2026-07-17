@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import bino.laryssa.backend.model.dto.MedicationRequest;
 import bino.laryssa.backend.model.dto.MedicationResponse;
+import bino.laryssa.backend.model.dto.RestockRequest;
 import bino.laryssa.backend.service.MedicationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -54,6 +55,11 @@ public class MedicationController {
     @PutMapping("/{id}/confirm-acquisition")
     public ResponseEntity<MedicationResponse> confirmAcquisition(@PathVariable Long id) {
         return ResponseEntity.ok(medicationService.confirmAcquisition(id));
+    }
+
+    @PutMapping("/{id}/confirm-restock")
+    public ResponseEntity<MedicationResponse> confirmRestock(@PathVariable Long id, @Valid @RequestBody RestockRequest request) {
+        return ResponseEntity.ok(medicationService.confirmRestock(id, request));
     }
 
     @PutMapping("/{id}/end-treatment")

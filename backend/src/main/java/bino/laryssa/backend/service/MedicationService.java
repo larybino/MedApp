@@ -13,6 +13,7 @@ import bino.laryssa.backend.model.Medication;
 import bino.laryssa.backend.model.User;
 import bino.laryssa.backend.model.dto.MedicationRequest;
 import bino.laryssa.backend.model.dto.MedicationResponse;
+import bino.laryssa.backend.model.dto.RestockRequest;
 import bino.laryssa.backend.model.enums.ScheduleStatus;
 import bino.laryssa.backend.repository.MedicationRepository;
 import bino.laryssa.backend.repository.UserRelationshipRepository;
@@ -46,6 +47,8 @@ public class MedicationService {
         medication.setPharmaceuticalForm(request.getPharmaceuticalForm());
         medication.setAdministrationRoute(request.getAdministrationRoute());
         medication.setUser(targetUser);
+        medication.setStartTime(request.getStartTime());
+        medication.setAcquisitionConfirmed(request.isAcquisitionConfirmed());
 
         if (request.getStockQuantity() > 0) {
             medication.setStockQuantity(request.getStockQuantity());
@@ -122,6 +125,17 @@ public class MedicationService {
 
         assertCanAccessUser(medication.getUser().getId());
         medication.setAcquisitionConfirmed(true);
+        return MedicationResponse.toResponse(medicationRepository.save(medication));
+    }
+
+    public MedicationResponse confirmRestock(Long id, RestockRequest request) {
+        Medication medication = medicationRepository.findById(id).orElseThrow(() -> new NotFoundException("Medicamento não encontrado"));
+
+        assertCanAccessUser(medication.getUser().getId());
+
+        double currentStock = medication.getCurrentStock() != null ? medication.getCurrentStock() : 0.0;
+        medication.setCurrentStock(currentStock + request.getQuantity());
+
         return MedicationResponse.toResponse(medicationRepository.save(medication));
     }
 
