@@ -12,6 +12,7 @@ class MedicationCard extends StatelessWidget {
   final VoidCallback onConfirm;
   final VoidCallback onEndTreatment;
   final VoidCallback onEdit;
+  final VoidCallback onRestock;
 
   const MedicationCard({
     super.key,
@@ -21,6 +22,7 @@ class MedicationCard extends StatelessWidget {
     required this.onConfirm,
     required this.onEndTreatment,
     required this.onEdit,
+    required this.onRestock,
   });
 
   String _statusLabel() {
@@ -165,7 +167,8 @@ class MedicationCard extends StatelessWidget {
               ],
             ),
             if (!medication.acquisitionConfirmed ||
-                medication.scheduleStatus == 'ACTIVE')
+                medication.scheduleStatus == 'ACTIVE' ||
+                medication.currentStock != null)
               Padding(
                 padding: const EdgeInsets.only(top: 10),
                 child: Wrap(
@@ -187,6 +190,24 @@ class MedicationCard extends StatelessWidget {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                             side: const BorderSide(color: AppColors.primary),
+                          ),
+                        ),
+                      ),
+                    if (medication.currentStock != null)
+                      TextButton.icon(
+                        onPressed: onRestock,
+                        icon: const Icon(Icons.inventory_2_outlined, size: 16),
+                        label: const Text('Repor estoque'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.warning,
+                          textStyle: const TextStyle(fontSize: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            side: const BorderSide(color: AppColors.warning),
                           ),
                         ),
                       ),

@@ -72,6 +72,18 @@ class MedicationService {
     }
   }
 
+  Future<MedicationModel> confirmRestock(int id, double quantity) async {
+    try {
+      final response = await _dio.put(
+        ApiEndpoints.confirmRestock(id),
+        data: {'quantity': quantity},
+      );
+      return MedicationModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handle(e);
+    }
+  }
+
   Future<MedicationModel> endTreatment(int id) async {
     try {
       final response = await _dio.put(ApiEndpoints.endTreatment(id));

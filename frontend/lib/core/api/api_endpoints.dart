@@ -29,6 +29,7 @@ class ApiEndpoints {
   static String medicationById(int id) => '/medications/$id';
   static String confirmAcquisition(int id) =>
       '/medications/$id/confirm-acquisition';
+  static String confirmRestock(int id) => '/medications/$id/confirm-restock';
   static String endTreatment(int id) => '/medications/$id/end-treatment';
   static String medicationsByUser(int userId) => '/medications?userId=$userId';
   static const String extractMedication = '/medications/extract';

@@ -20,10 +20,12 @@ class CreateMedicationScreen extends StatefulWidget {
     super.key,
     this.initialMedication,
     this.confirmAcquisitionMode = false,
+    this.initialTargetUserId,
   });
 
   final MedicationModel? initialMedication;
   final bool confirmAcquisitionMode;
+  final int? initialTargetUserId;
 
   @override
   State<CreateMedicationScreen> createState() => _CreateMedicationScreenState();
@@ -87,6 +89,8 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedTargetUserId = widget.initialTargetUserId;
+
     final med = widget.initialMedication;
     if (med == null) return;
 
@@ -467,7 +471,10 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
       }
       if (mounted) {
         if (Navigator.of(context).canPop()) {
-          Navigator.pop(context, true);
+          Navigator.pop(context, {
+            'success': true,
+            'targetUserId': _selectedTargetUserId,
+          });
         } else {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const MedicationListScreen()),
@@ -643,7 +650,7 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
                 const SizedBox(height: 4),
                 const _ReviewHint(
                   text:
-                      'Intervalo não reconhecido automaticamente (RN001) — confirme o valor correto.',
+                      'Intervalo não reconhecido automaticamente — confirme o valor correto.',
                 ),
               ],
               SizedBox(height: height * 0.02),

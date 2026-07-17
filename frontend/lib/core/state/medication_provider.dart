@@ -43,7 +43,7 @@ class MedicationProvider extends ChangeNotifier {
 
   Future<void> createMedication(Map<String, dynamic> data) async {
     await _service.create(data);
-    await loadMedications();
+    await loadMedications(userId: data['userId'] as int?);
   }
 
   Future<void> updateMedication(int id, Map<String, dynamic> data) async {
@@ -68,22 +68,27 @@ class MedicationProvider extends ChangeNotifier {
     payload.addAll(_normalizeMedicationPayload(data));
 
     await _service.update(id, payload);
-    await loadMedications();
+    await loadMedications(userId: payload['userId'] as int?);
   }
 
-  Future<void> deleteMedication(int id) async {
+  Future<void> deleteMedication(int id, {int? userId}) async {
     await _service.delete(id);
-    await loadMedications();
+    await loadMedications(userId: userId);
   }
 
-  Future<void> confirmAcquisition(int id) async {
+  Future<void> confirmAcquisition(int id, {int? userId}) async {
     await _service.confirmAcquisition(id);
-    await loadMedications();
+    await loadMedications(userId: userId);
   }
 
-  Future<void> endTreatment(int id) async {
+  Future<void> restockMedication(int id, double quantity, {int? userId}) async {
+    await _service.confirmRestock(id, quantity);
+    await loadMedications(userId: userId);
+  }
+
+  Future<void> endTreatment(int id, {int? userId}) async {
     await _service.endTreatment(id);
-    await loadMedications();
+    await loadMedications(userId: userId);
   }
 
   Map<String, dynamic> _normalizeMedicationPayload(Map<String, dynamic> data) {

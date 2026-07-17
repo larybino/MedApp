@@ -6,6 +6,7 @@ import 'package:frontend/core/state/user_provider.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/features/medication/screens/create_medication_screen.dart';
 import 'package:frontend/shared/widgets/index.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 class MedicationListScreen extends StatefulWidget {
@@ -18,16 +19,33 @@ class MedicationListScreen extends StatefulWidget {
 class _MedicationListScreenState extends State<MedicationListScreen> {
   int? _selectedMemberId;
 
+  Future<void> _onRefresh() async {
+    await _reload();
+    if (context.read<UserProvider>().isMaster) {
+      await context.read<MemberProvider>().loadMembers();
+    }
+    await context.read<MedicationProvider>().checkLowStockAlerts();
+  }
+
+  Future<void> _initializeScreen() async {
+    final userProvider = context.read<UserProvider>();
+    final medicationProvider = context.read<MedicationProvider>();
+    final memberProvider = context.read<MemberProvider>();
+
+    await userProvider.loadUser();
+    await medicationProvider.loadMedications(userId: _selectedMemberId);
+    await medicationProvider.checkLowStockAlerts();
+
+    if (userProvider.isMaster) {
+      await memberProvider.loadMembers();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final userId = _selectedMemberId;
-      await context.read<MedicationProvider>().loadMedications(userId: userId);
-      await context.read<MedicationProvider>().checkLowStockAlerts();
-      if (context.read<UserProvider>().isMaster) {
-        await context.read<MemberProvider>().loadMembers();
-      }
+      await _initializeScreen();
     });
   }
 
@@ -58,10 +76,126 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
 
     if (confirmed == true && mounted) {
       try {
-        await context.read<MedicationProvider>().deleteMedication(id);
+        await context.read<MedicationProvider>().deleteMedication(
+          id,
+          userId: _selectedMemberId,
+        );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Medicamento removido com sucesso!')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _showRestockDialog(int id, String name) async {
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final quantity = await showDialog<double>(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: AppColors.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.inventory_2_rounded,
+                    color: AppColors.warning,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Repor estoque',
+                  style: GoogleFonts.syne(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.secondary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Quantas unidades de "$name" você repôs?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.secondary.withValues(alpha: 0.6),
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                CustomTextField(
+                  label: 'Quantidade reposta',
+                  controller: controller,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  validator: (value) {
+                    final parsed = double.tryParse(
+                      value?.replaceAll(',', '.') ?? '',
+                    );
+                    if (parsed == null || parsed <= 0) {
+                      return 'Informe uma quantidade válida';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
+                AppButton(
+                  label: 'Confirmar',
+                  onPressed: () {
+                    if (formKey.currentState!.validate()) {
+                      final parsed = double.parse(
+                        controller.text.replaceAll(',', '.'),
+                      );
+                      Navigator.pop(context, parsed);
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.secondary.withValues(alpha: 0.6),
+                  ),
+                  child: const Text('Cancelar'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (quantity != null && mounted) {
+      try {
+        await context.read<MedicationProvider>().restockMedication(
+          id,
+          quantity,
+          userId: _selectedMemberId,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Estoque reposto com sucesso!')),
           );
         }
       } catch (e) {
@@ -138,82 +272,110 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
           Expanded(
             child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : provider.medications.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.medication_outlined,
-                          size: 64,
-                          color: AppColors.secondary.withValues(alpha: 0.3),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Nenhum medicamento cadastrado',
-                          style: TextStyle(
-                            color: AppColors.secondary.withValues(alpha: 0.6),
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: provider.medications.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final med = provider.medications[index];
-                      return MedicationCard(
-                        medication: med,
-                        intervalLabel: _intervalLabel(med.doseInterval),
-                        onDelete: () => _confirmDelete(med.id, med.name),
-                        onConfirm: () async {
-                          if (!mounted) return;
-                          final updated = await Navigator.push<bool>(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => CreateMedicationScreen(
-                                initialMedication: med,
-                                confirmAcquisitionMode: true,
-                              ),
-                            ),
-                          );
-                          if (updated == true && mounted) _reload();
-                        },
-                        onEndTreatment: () async {
-                          try {
-                            await context
-                                .read<MedicationProvider>()
-                                .endTreatment(med.id);
-                          } catch (e) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(e.toString()),
-                                  backgroundColor: Colors.red,
+                : RefreshIndicator(
+                    onRefresh: _onRefresh,
+                    child: provider.medications.isEmpty
+                        ? ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            children: [
+                              const SizedBox(height: 120),
+                              Icon(
+                                Icons.medication_outlined,
+                                size: 64,
+                                color: AppColors.secondary.withValues(
+                                  alpha: 0.3,
                                 ),
-                              );
-                            }
-                          }
-                        },
-                        onEdit: () async {
-                          if (!mounted) return;
-                          final updated = await Navigator.push<bool>(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => CreateMedicationScreen(
-                                initialMedication: med,
                               ),
-                            ),
-                          );
-                          if (updated == true && mounted) {
-                            _reload();
-                          }
-                        },
-                      );
-                    },
+                              const SizedBox(height: 16),
+                              Text(
+                                'Nenhum medicamento cadastrado',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: AppColors.secondary.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          )
+                        : ListView.separated(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.all(16),
+                            itemCount: provider.medications.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 10),
+                            itemBuilder: (context, index) {
+                              final med = provider.medications[index];
+                              return MedicationCard(
+                                medication: med,
+                                intervalLabel: _intervalLabel(med.doseInterval),
+                                onDelete: () =>
+                                    _confirmDelete(med.id, med.name),
+                                onRestock: () =>
+                                    _showRestockDialog(med.id, med.name),
+                                onConfirm: () async {
+                                  if (!mounted) return;
+                                  final result =
+                                      await Navigator.push<
+                                        Map<String, dynamic>
+                                      >(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              CreateMedicationScreen(
+                                                initialMedication: med,
+                                                confirmAcquisitionMode: true,
+                                              ),
+                                        ),
+                                      );
+                                  if (result?['success'] == true && mounted) {
+                                    _reload();
+                                  }
+                                },
+                                onEndTreatment: () async {
+                                  try {
+                                    await context
+                                        .read<MedicationProvider>()
+                                        .endTreatment(
+                                          med.id,
+                                          userId: _selectedMemberId,
+                                        );
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(e.toString()),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                                onEdit: () async {
+                                  if (!mounted) return;
+                                  final result =
+                                      await Navigator.push<
+                                        Map<String, dynamic>
+                                      >(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              CreateMedicationScreen(
+                                                initialMedication: med,
+                                              ),
+                                        ),
+                                      );
+                                  if (result?['success'] == true && mounted) {
+                                    _reload();
+                                  }
+                                },
+                              );
+                            },
+                          ),
                   ),
           ),
         ],
@@ -223,11 +385,20 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
         onPressed: () async {
           await context.read<MemberProvider>().loadMembers();
           if (mounted) {
-            final created = await Navigator.push<bool>(
+            final result = await Navigator.push<Map<String, dynamic>>(
               context,
-              MaterialPageRoute(builder: (_) => const CreateMedicationScreen()),
+              MaterialPageRoute(
+                builder: (_) => CreateMedicationScreen(
+                  initialTargetUserId: _selectedMemberId,
+                ),
+              ),
             );
-            if (created == true && mounted) _reload();
+            if (result?['success'] == true && mounted) {
+              setState(() {
+                _selectedMemberId = result?['targetUserId'] as int?;
+              });
+              _reload();
+            }
           }
         },
         child: const Icon(Icons.add, color: Colors.white),
