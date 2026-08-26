@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/core/routing/bottom_nav_handler.dart';
 import 'package:frontend/core/state/medication_provider.dart';
 import 'package:frontend/core/state/member_provider.dart';
+import 'package:frontend/core/state/schedule_provider.dart';
 import 'package:frontend/core/state/user_provider.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/features/medication/screens/create_medication_screen.dart';
@@ -18,6 +19,18 @@ class MedicationListScreen extends StatefulWidget {
 
 class _MedicationListScreenState extends State<MedicationListScreen> {
   int? _selectedMemberId;
+
+  Future<void> _syncNotifications() async {
+    final userProvider = context.read<UserProvider>();
+    final memberProvider = context.read<MemberProvider>();
+
+    if (!userProvider.isMaster) return;
+
+    await context.read<ScheduleProvider>().syncNotifications(
+      isMaster: true,
+      memberIds: memberProvider.members.map((m) => m.id).toList(),
+    );
+  }
 
   Future<void> _onRefresh() async {
     await _reload();
@@ -80,6 +93,7 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
           id,
           userId: _selectedMemberId,
         );
+        await _syncNotifications();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Medicamento removido com sucesso!')),
@@ -193,6 +207,7 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
           quantity,
           userId: _selectedMemberId,
         );
+        await _syncNotifications();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Estoque reposto com sucesso!')),
@@ -332,6 +347,7 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
                                       );
                                   if (result?['success'] == true && mounted) {
                                     _reload();
+                                    await _syncNotifications();
                                   }
                                 },
                                 onEndTreatment: () async {
@@ -342,6 +358,7 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
                                           med.id,
                                           userId: _selectedMemberId,
                                         );
+                                    await _syncNotifications();
                                   } catch (e) {
                                     if (mounted) {
                                       ScaffoldMessenger.of(
@@ -371,6 +388,7 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
                                       );
                                   if (result?['success'] == true && mounted) {
                                     _reload();
+                                    await _syncNotifications();
                                   }
                                 },
                               );
@@ -398,6 +416,7 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
                 _selectedMemberId = result?['targetUserId'] as int?;
               });
               _reload();
+              await _syncNotifications();
             }
           }
         },

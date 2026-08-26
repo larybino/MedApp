@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/core/state/medication_provider.dart';
+import 'package:frontend/core/state/schedule_provider.dart';
 import 'package:frontend/core/state/user_provider.dart';
 import 'package:frontend/core/state/member_provider.dart';
 import 'package:frontend/core/theme/app_colors.dart';
@@ -218,6 +219,17 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
       lastDate: DateTime.now().add(const Duration(days: 730)),
     );
     if (picked != null) setState(() => _forms[index].endDate = picked);
+  }
+
+  Future<void> _syncNotifications() async {
+    final userProvider = context.read<UserProvider>();
+    if (!userProvider.isMaster) return;
+
+    final memberProvider = context.read<MemberProvider>();
+    await context.read<ScheduleProvider>().syncNotifications(
+      isMaster: true,
+      memberIds: memberProvider.members.map((m) => m.id).toList(),
+    );
   }
 
   Future<void> _scanPrescription() async {
@@ -469,6 +481,7 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
           );
         }
       }
+      await _syncNotifications();
       if (mounted) {
         if (Navigator.of(context).canPop()) {
           Navigator.pop(context, {
