@@ -38,7 +38,7 @@ public class Medication  {
     private Double doseAmount;
     @Column(nullable = false)
     private String doseUnit;
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "TEXT")
     private String medicationImage;
     private boolean acquisitionConfirmed = false;
     @Column(nullable = false, updatable = false)

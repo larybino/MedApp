@@ -32,7 +32,7 @@ public class User {
     private LocalDate birthDate;
     private double weight;
     private String phone;
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "TEXT")
     private String profilePicture;
     private UserRole role;
     @Column(nullable = false)
