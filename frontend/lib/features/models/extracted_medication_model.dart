@@ -11,6 +11,8 @@ class ExtractedMedicationModel {
   final double? doseAmount;
   final String? doseUnit;
   final String? treatmentDurationDaysText;
+  final double? stockQuantity;
+  final bool requiresManualStock;
 
   ExtractedMedicationModel({
     this.name,
@@ -25,6 +27,8 @@ class ExtractedMedicationModel {
     this.doseAmount,
     this.doseUnit,
     this.treatmentDurationDaysText,
+    this.stockQuantity,
+    required this.requiresManualStock,
   });
 
   factory ExtractedMedicationModel.fromJson(Map<String, dynamic> json) {
@@ -41,6 +45,8 @@ class ExtractedMedicationModel {
       doseAmount: (json['doseAmount'] as num?)?.toDouble(),
       doseUnit: json['doseUnit'],
       treatmentDurationDaysText: json['treatmentDurationDaysText'],
+      stockQuantity: (json['stockQuantity'] as num?)?.toDouble(),
+      requiresManualStock: json['requiresManualStock'] ?? true,
     );
   }
 

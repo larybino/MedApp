@@ -54,6 +54,7 @@ class _MedicationFormData {
 
   bool needsManualIntervalReview = false;
   bool needsManualDosageReview = false;
+  bool needsManualStockReview = false;
 
   void dispose() {
     nameController.dispose();
@@ -253,11 +254,6 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
             ),
             const SizedBox(height: 16),
             ListTile(
-              leading: const Icon(Icons.camera_alt, color: AppColors.primary),
-              title: const Text('Câmera'),
-              onTap: () => Navigator.pop(context, 'camera'),
-            ),
-            ListTile(
               leading: const Icon(
                 Icons.photo_library,
                 color: AppColors.primary,
@@ -297,10 +293,11 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
       fileName = result.files.single.name;
       mimeType = 'application/pdf';
     } else {
-      final source = choice == 'camera'
-          ? ImageSource.camera
-          : ImageSource.gallery;
-      final picked = await _picker.pickImage(source: source, imageQuality: 85);
+      // Único caminho restante além do PDF: escolha feita pela galeria.
+      final picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
       if (picked == null) return;
 
       bytes = await picked.readAsBytes();
@@ -362,12 +359,16 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
       form.activeIngredientsController.text = e.activeIngredients ?? '';
       form.administrationRouteController.text = e.administrationRoute ?? '';
       form.pharmaceuticalFormController.text = e.pharmaceuticalForm ?? '';
+      form.stockController.text = e.stockQuantity != null
+          ? _formatDoseAmount(e.stockQuantity!)
+          : '';
 
       if (!e.requiresManualInterval && e.doseInterval != null) {
         form.selectedInterval = e.doseInterval!;
       }
       form.needsManualIntervalReview = e.requiresManualInterval;
       form.needsManualDosageReview = e.requiresManualDosage;
+      form.needsManualStockReview = e.requiresManualStock;
 
       final days = e.parsedTreatmentDurationDays;
       if (days != null) {
@@ -799,6 +800,13 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
                   decimal: true,
                 ),
               ),
+              if (_forms[i].needsManualStockReview) ...[
+                const SizedBox(height: 4),
+                const _ReviewHint(
+                  text:
+                      'Quantidade em estoque não identificada na receita — confirme ou preencha manualmente.',
+                ),
+              ],
               const SizedBox(height: 4),
               Text(
                 'Ex: se a dose é em gotas, informe o total de gotas do '
