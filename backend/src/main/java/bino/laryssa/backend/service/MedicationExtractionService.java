@@ -57,6 +57,7 @@ public class MedicationExtractionService {
             }
 
             med.setRequiresManualDosage(med.getDosage() == null);
+            med.setRequiresManualStock(med.getStockQuantity() == null);
         }
 
         return parsed;
@@ -78,7 +79,8 @@ public class MedicationExtractionService {
                             "activeIngredients", stringNullable,
                             "pharmaceuticalForm", stringNullable,
                             "administrationRoute", stringNullable,
-                            "treatmentDurationDaysText", stringNullable
+                            "treatmentDurationDaysText", stringNullable,
+                            "stockQuantity", Schema.builder().type(Type.Known.NUMBER).nullable(true).build()
                     ))
                     .required(List.of("name", "dosage", "doseIntervalText"))
                     .build();
@@ -118,6 +120,12 @@ public class MedicationExtractionService {
                     - administrationRoute: via de administração, ex. "oral", "nasal", "tópica"
                     - treatmentDurationDaysText: duração do tratamento em dias, exatamente como
                       descrita na receita, ex. "3 dias" ou "5 dias". Se for uso contínuo, retorne null.
+                    - stockQuantity: quantidade total de unidades prescritas/dispensadas para esse
+                      medicamento, como número, ex. 90 (para "90 comprimidos") ou 30 (para uma
+                      caixa de 30 cápsulas). Extraia apenas quando a receita indicar explicitamente
+                      uma quantidade total a ser adquirida/dispensada — não confunda com doseAmount
+                      (quantidade por dose administrada de cada vez). Se não houver essa informação
+                      na receita, retorne null.
 
                     Se um campo não puder ser determinado com confiança, retorne o valor null
                     (não use texto como "não especificado", "N/A" ou similar — o valor deve ser

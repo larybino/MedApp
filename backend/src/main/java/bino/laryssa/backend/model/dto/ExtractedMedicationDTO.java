@@ -16,4 +16,6 @@ public class ExtractedMedicationDTO {
     private Double doseAmount;
     private String doseUnit;
     private String treatmentDurationDaysText;
+    private Double stockQuantity;
+    private boolean requiresManualStock;
 }
