@@ -2,6 +2,7 @@ package bino.laryssa.backend.model.dto;
 
 import java.time.LocalDate;
 
+import bino.laryssa.backend.model.enums.Gender;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -12,7 +13,7 @@ public class UpdateUserRequest {
     private String email;
     private LocalDate birthDate;
     private double weight;
-    private String gender;
+    private Gender gender;
     private String phone;
     private String profilePicture;
 

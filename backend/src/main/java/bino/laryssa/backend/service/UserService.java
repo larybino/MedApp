@@ -1,6 +1,7 @@
 package bino.laryssa.backend.service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -67,7 +68,7 @@ public class UserService {
         user.setEmail(request.getEmail());
         user.setBirthDate(request.getBirthDate());
         user.setWeight(request.getWeight());
-        user.setGender(Gender.valueOf(request.getGender()));
+        user.setGender(request.getGender());
         user.setPhone(request.getPhone());
         user.setProfilePicture(request.getProfilePicture());
         user = userRepository.save(user);
@@ -79,6 +80,8 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
         user.setActive(false);
+        user.setEmail(user.getEmail() + "_" + LocalDateTime.now().format(
+            DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
         userRepository.save(user);
     }
 
