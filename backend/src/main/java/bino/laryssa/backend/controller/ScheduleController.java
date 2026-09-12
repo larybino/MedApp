@@ -2,6 +2,7 @@ package bino.laryssa.backend.controller;
 
 import bino.laryssa.backend.model.ScheduleDose;
 import bino.laryssa.backend.model.dto.ScheduleDoseResponse;
+import bino.laryssa.backend.model.enums.DoseStatus;
 import bino.laryssa.backend.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -19,14 +20,19 @@ public class ScheduleController {
     private final ScheduleService scheduleService;
 
     @GetMapping("/today")
-    public ResponseEntity<List<ScheduleDoseResponse>> getDosesToday(@RequestParam Long userId) {
-        List<ScheduleDose> doses = scheduleService.getDosesPerDay(userId, LocalDate.now());
+    public ResponseEntity<List<ScheduleDoseResponse>> getDosesToday(
+            @RequestParam Long userId,
+            @RequestParam(required = false) DoseStatus status) {
+        List<ScheduleDose> doses = scheduleService.getDosesPerDay(userId, LocalDate.now(), status);
         return ResponseEntity.ok(doses.stream().map(ScheduleDoseResponse::toResponse).toList());
     }
 
     @GetMapping("/doses")
-    public ResponseEntity<List<ScheduleDoseResponse>> getDosesByDate(@RequestParam Long userId, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        List<ScheduleDose> doses = scheduleService.getDosesPerDay(userId, date);
+    public ResponseEntity<List<ScheduleDoseResponse>> getDosesByDate(
+            @RequestParam Long userId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) DoseStatus status) {
+        List<ScheduleDose> doses = scheduleService.getDosesPerDay(userId, date, status);
         return ResponseEntity.ok(doses.stream().map(ScheduleDoseResponse::toResponse).toList());
     }
 

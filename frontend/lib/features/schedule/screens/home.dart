@@ -16,6 +16,13 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int? _selectedMemberId;
+  String? _statusFilter;
+
+  void _toggleStatusFilter(String status) {
+    setState(() {
+      _statusFilter = _statusFilter == status ? null : status;
+    });
+  }
 
   Future<void> _initializeScreen() async {
     final userProvider = context.read<UserProvider>();
@@ -137,6 +144,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final now = DateTime.now();
     final dateLabel =
         '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
+    final displayedDoses = _statusFilter == null
+        ? provider.doses
+        : provider.doses.where((d) => d.doseStatus == _statusFilter).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -178,21 +188,29 @@ class _HomeScreenState extends State<HomeScreen> {
                     label: 'Total',
                     value: provider.doses.length.toString(),
                     color: AppColors.secondary,
+                    isSelected: _statusFilter == null,
+                    onTap: () => setState(() => _statusFilter = null),
                   ),
                   SummaryItem(
                     label: 'Tomadas',
                     value: provider.takenDoses.length.toString(),
                     color: AppColors.primary,
+                    isSelected: _statusFilter == 'TAKEN',
+                    onTap: () => _toggleStatusFilter('TAKEN'),
                   ),
                   SummaryItem(
                     label: 'Atrasadas',
                     value: provider.delayedDoses.length.toString(),
                     color: Colors.orange,
+                    isSelected: _statusFilter == 'DELAYED',
+                    onTap: () => _toggleStatusFilter('DELAYED'),
                   ),
                   SummaryItem(
                     label: 'Perdidas',
                     value: provider.missedDoses.length.toString(),
                     color: Colors.red,
+                    isSelected: _statusFilter == 'MISSED',
+                    onTap: () => _toggleStatusFilter('MISSED'),
                   ),
                 ],
               ),
@@ -209,7 +227,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       label: 'Eu',
                       isSelected: _selectedMemberId == null,
                       onTap: () {
-                        setState(() => _selectedMemberId = null);
+                        setState(() {
+                          _selectedMemberId = null;
+                          _statusFilter = null;
+                        });
                         _reload();
                       },
                     ),
@@ -221,7 +242,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           label: m.name,
                           isSelected: _selectedMemberId == m.id,
                           onTap: () {
-                            setState(() => _selectedMemberId = m.id);
+                            setState(() {
+                              _selectedMemberId = m.id;
+                              _statusFilter = null;
+                            });
                             _reload();
                           },
                         ),
@@ -237,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : RefreshIndicator(
                     onRefresh: _onRefresh,
-                    child: provider.doses.isEmpty
+                    child: displayedDoses.isEmpty
                         ? ListView(
                             physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -252,7 +276,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'Nenhum medicamento para hoje',
+                                _statusFilter == null
+                                    ? 'Nenhum medicamento para hoje'
+                                    : 'Nenhum medicamento com esse status',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: AppColors.secondary.withValues(
@@ -266,11 +292,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         : ListView.separated(
                             physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.all(16),
-                            itemCount: provider.doses.length,
+                            itemCount: displayedDoses.length,
                             separatorBuilder: (_, _) =>
                                 const SizedBox(height: 10),
                             itemBuilder: (context, index) {
-                              final dose = provider.doses[index];
+                              final dose = displayedDoses[index];
                               return DoseCard(
                                 dose: dose,
                                 formattedTime: _formatTime(dose.scheduledTime),

@@ -23,7 +23,6 @@ import bino.laryssa.backend.model.dto.RegisterRequest;
 import bino.laryssa.backend.model.dto.ResetPasswordRequest;
 import bino.laryssa.backend.model.dto.UpdateUserRequest;
 import bino.laryssa.backend.model.dto.UserResponse;
-import bino.laryssa.backend.model.enums.Gender;
 import bino.laryssa.backend.model.enums.UserRole;
 import bino.laryssa.backend.repository.UserRelationshipRepository;
 import bino.laryssa.backend.repository.UserRepository;

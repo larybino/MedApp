@@ -12,4 +12,5 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     Optional<Schedule> findByMedicationId(Long medicationId);
     List<Schedule> findByMedication_UserIdAndScheduleStatus(Long userId, ScheduleStatus scheduleStatus);
     boolean existsByMedicationId(Long medicationId);
+    List<Schedule> findByScheduleStatus(ScheduleStatus scheduleStatus);
 }

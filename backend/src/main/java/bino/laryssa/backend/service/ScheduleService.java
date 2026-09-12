@@ -83,10 +83,11 @@ public class ScheduleService {
         scheduleRepository.save(schedule);
     }
 
-    public List<ScheduleDose> getDosesPerDay(Long userId, LocalDate date) {
+    public List<ScheduleDose> getDosesPerDay(Long userId, LocalDate date, DoseStatus status) {
         return scheduleDoseRepository.findBySchedule_Medication_UserIdAndScheduledDate(userId, date)
             .stream()
             .filter(dose -> dose.getSchedule().getScheduleStatus() != ScheduleStatus.CANCELLED)
+            .filter(dose -> status == null || dose.getDoseStatus() == status)
             .toList();
     }
 
@@ -205,4 +206,19 @@ public class ScheduleService {
             scheduleDoseRepository.saveAll(toMiss);
         }
     }
+
+    @Scheduled(cron = "0 0 0 * * *")
+    public void extendActiveSchedulesDoses() {
+        List<Schedule> activeSchedules = scheduleRepository.findByScheduleStatus(ScheduleStatus.ACTIVE);
+        LocalDate today = LocalDate.now();
+        LocalDate horizon = today.plusDays(7);
+
+        for (Schedule schedule : activeSchedules) {
+            if (schedule.getEndDate() != null && schedule.getEndDate().isBefore(today)) {
+                finish(schedule);
+                continue;
+            }
+            generateDosesPerPeriod(schedule, today, horizon);
+        }
     }
+}
