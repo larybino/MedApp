@@ -41,4 +41,10 @@ public class ScheduleController {
         ScheduleDose dose = scheduleService.confirmDose(id);
         return ResponseEntity.ok(ScheduleDoseResponse.toResponse(dose));
     }
+
+    @PutMapping("/doses/{id}/unconfirm")
+    public ResponseEntity<ScheduleDoseResponse> unconfirmDose(@PathVariable Long id) {
+        ScheduleDose dose = scheduleService.unconfirmDose(id);
+        return ResponseEntity.ok(ScheduleDoseResponse.toResponse(dose));
+    }
 }

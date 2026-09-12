@@ -107,6 +107,50 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     }
   }
 
+  Future<void> _unconfirmDose(int doseId, String medicationName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Desfazer confirmação'),
+        content: Text('Marcar "$medicationName" como não tomada novamente?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Desfazer',
+              style: TextStyle(color: AppColors.danger),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await context.read<ScheduleProvider>().unconfirmDose(
+          doseId,
+          userId: _selectedMemberId,
+          date: _selectedDateParam,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Confirmação desfeita.')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
   String _formatTime(String time) =>
       time.length >= 5 ? time.substring(0, 5) : time;
 
@@ -332,17 +376,21 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                 const SizedBox(height: 10),
                             itemBuilder: (context, index) {
                               final dose = provider.doses[index];
+                              final isConfirmed =
+                                  dose.doseStatus == 'TAKEN' ||
+                                  dose.doseStatus == 'DELAYED';
                               return ScheduleDoseCard(
                                 dose: dose,
                                 formattedTime: _formatTime(dose.scheduledTime),
-                                onToggle:
-                                    (dose.doseStatus == 'PENDING' ||
-                                        dose.doseStatus == 'MISSED')
-                                    ? () => _confirmDose(
+                                onToggle: isConfirmed
+                                    ? () => _unconfirmDose(
                                         dose.id,
                                         dose.medicationName,
                                       )
-                                    : null,
+                                    : () => _confirmDose(
+                                        dose.id,
+                                        dose.medicationName,
+                                      ),
                               );
                             },
                           ),

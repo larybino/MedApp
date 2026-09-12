@@ -84,7 +84,7 @@ public class ScheduleService {
     }
 
     public List<ScheduleDose> getDosesPerDay(Long userId, LocalDate date, DoseStatus status) {
-        return scheduleDoseRepository.findBySchedule_Medication_UserIdAndScheduledDate(userId, date)
+        return scheduleDoseRepository.findBySchedule_Medication_UserIdAndScheduledDateOrderByScheduledTimeAsc(userId, date)
             .stream()
             .filter(dose -> dose.getSchedule().getScheduleStatus() != ScheduleStatus.CANCELLED)
             .filter(dose -> status == null || dose.getDoseStatus() == status)
@@ -99,7 +99,7 @@ public class ScheduleService {
             throw new IllegalArgumentException("Esta dose já foi " + statusText);        
         }
 
-        dose.setDoseStatus(dose.isWithinConfirmationWindow()? DoseStatus.TAKEN: DoseStatus.DELAYED);
+        dose.setDoseStatus(dose.isLate() ? DoseStatus.DELAYED : DoseStatus.TAKEN);
         dose.setConfirmedAt(LocalDateTime.now());
         scheduleDoseRepository.save(dose);
         
@@ -113,6 +113,31 @@ public class ScheduleService {
 
         return dose;
         }
+
+    public ScheduleDose unconfirmDose(Long doseId) {
+        ScheduleDose dose = scheduleDoseRepository.findById(doseId).orElseThrow(() -> new NotFoundException("Dose não encontrada"));
+
+        if (dose.getDoseStatus() != DoseStatus.TAKEN && dose.getDoseStatus() != DoseStatus.DELAYED) {
+            throw new IllegalArgumentException("Esta dose ainda não foi confirmada");
+        }
+
+        boolean wasConfirmed = dose.getDoseStatus() == DoseStatus.TAKEN || dose.getDoseStatus() == DoseStatus.DELAYED;
+
+        dose.setDoseStatus(dose.isLate() ? DoseStatus.MISSED : DoseStatus.PENDING);
+        dose.setConfirmedAt(null);
+        scheduleDoseRepository.save(dose);
+
+        if (wasConfirmed) {
+            Medication medication = dose.getSchedule().getMedication();
+            double amountToRestore = medication.getDoseAmount() != null ? medication.getDoseAmount() : 1.0;
+            if (medication.getCurrentStock() != null) {
+                medication.setCurrentStock(medication.getCurrentStock() + amountToRestore);
+                medicationRepository.save(medication);
+            }
+        }
+
+        return dose;
+    }
 
     private void generateDosesPerPeriod(Schedule schedule, LocalDate from, LocalDate to) {
         if (schedule.getMedication() == null || schedule.getMedication().getStartTime() == null) {
@@ -186,19 +211,10 @@ public class ScheduleService {
 
     @Scheduled(fixedRate = 1800000)
     public void markMissedDoses() {
-        LocalDateTime now = LocalDateTime.now();
-
         List<ScheduleDose> pendingDoses = scheduleDoseRepository.findByDoseStatus(DoseStatus.PENDING);
 
         List<ScheduleDose> toMiss = pendingDoses.stream()
-                .filter(dose -> {
-                    LocalDateTime scheduled = LocalDateTime.of(
-                            dose.getScheduledDate(),
-                            dose.getScheduledTime());
-                    LocalDateTime windowEnd = scheduled.plusMinutes(
-                            dose.getConfirmationWindowMinutes());
-                    return now.isAfter(windowEnd);
-                })
+                .filter(ScheduleDose::isLate)
                 .toList();
 
         if (!toMiss.isEmpty()) {
@@ -211,7 +227,7 @@ public class ScheduleService {
     public void extendActiveSchedulesDoses() {
         List<Schedule> activeSchedules = scheduleRepository.findByScheduleStatus(ScheduleStatus.ACTIVE);
         LocalDate today = LocalDate.now();
-        LocalDate horizon = today.plusDays(7);
+        LocalDate horizon = today.plusDays(30);
 
         for (Schedule schedule : activeSchedules) {
             if (schedule.getEndDate() != null && schedule.getEndDate().isBefore(today)) {

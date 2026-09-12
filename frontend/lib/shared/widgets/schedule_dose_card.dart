@@ -16,7 +16,9 @@ class ScheduleDoseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isTaken = dose.doseStatus == 'TAKEN';
+    final isDelayed = dose.doseStatus == 'DELAYED';
     final isMissed = dose.doseStatus == 'MISSED';
+    final isConfirmed = isTaken || isDelayed;
 
     return Container(
       decoration: BoxDecoration(
@@ -72,13 +74,15 @@ class ScheduleDoseCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(15),
                   color: isTaken
                       ? AppColors.primary
+                      : isDelayed
+                      ? Colors.orange
                       : isMissed
                       ? Colors.grey.withValues(alpha: 0.3)
                       : AppColors.secondary.withValues(alpha: 0.2),
                 ),
                 child: AnimatedAlign(
                   duration: const Duration(milliseconds: 200),
-                  alignment: isTaken
+                  alignment: isConfirmed
                       ? Alignment.centerRight
                       : Alignment.centerLeft,
                   child: Container(

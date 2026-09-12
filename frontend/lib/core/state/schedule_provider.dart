@@ -68,6 +68,15 @@ class ScheduleProvider extends ChangeNotifier {
     await loadTodayDoses(userId: userId);
   }
 
+  Future<void> unconfirmDose(int doseId, {int? userId, String? date}) async {
+    await _service.unconfirmDose(doseId);
+    if (date != null) {
+      await loadDosesByDate(date, userId: userId);
+      return;
+    }
+    await loadTodayDoses(userId: userId);
+  }
+
   Future<void> syncNotifications({
     required bool isMaster,
     required List<int> memberIds,

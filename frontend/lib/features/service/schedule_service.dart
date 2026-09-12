@@ -46,4 +46,13 @@ class ScheduleService {
       throw ApiErrorHandler.handle(e);
     }
   }
+
+  Future<ScheduledDoseModel> unconfirmDose(int doseId) async {
+    try {
+      final response = await _dio.put(ApiEndpoints.unconfirmDose(doseId));
+      return ScheduledDoseModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handle(e);
+    }
+  }
 }

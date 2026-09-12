@@ -132,6 +132,49 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _unconfirmDose(int doseId, String medicationName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Desfazer confirmação'),
+        content: Text('Marcar "$medicationName" como não tomada novamente?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Desfazer',
+              style: TextStyle(color: AppColors.danger),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await context.read<ScheduleProvider>().unconfirmDose(
+          doseId,
+          userId: _selectedMemberId,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Confirmação desfeita.')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
   String _formatTime(String time) {
     return time.length >= 5 ? time.substring(0, 5) : time;
   }
@@ -297,6 +340,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 const SizedBox(height: 10),
                             itemBuilder: (context, index) {
                               final dose = displayedDoses[index];
+                              final isConfirmed =
+                                  dose.doseStatus == 'TAKEN' ||
+                                  dose.doseStatus == 'DELAYED';
                               return DoseCard(
                                 dose: dose,
                                 formattedTime: _formatTime(dose.scheduledTime),
@@ -304,6 +350,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                     (dose.doseStatus == 'PENDING' ||
                                         dose.doseStatus == 'MISSED')
                                     ? () => _confirmDose(
+                                        dose.id,
+                                        dose.medicationName,
+                                      )
+                                    : null,
+                                onUndo: isConfirmed
+                                    ? () => _unconfirmDose(
                                         dose.id,
                                         dose.medicationName,
                                       )

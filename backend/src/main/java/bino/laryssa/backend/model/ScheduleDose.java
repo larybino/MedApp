@@ -63,4 +63,10 @@ public class ScheduleDose {
         LocalDateTime now = LocalDateTime.now();
         return !now.isBefore(windowStart) && now.isBefore(windowEnd);
     }
+
+    public boolean isLate() {
+        LocalDateTime scheduled = LocalDateTime.of(scheduledDate, scheduledTime);
+        LocalDateTime windowEnd = scheduled.plusMinutes(confirmationWindowMinutes);
+        return LocalDateTime.now().isAfter(windowEnd);
+    }
 }

@@ -6,38 +6,52 @@ class DoseCard extends StatelessWidget {
   final ScheduledDoseModel dose;
   final String formattedTime;
   final VoidCallback? onConfirm;
+  final VoidCallback? onUndo;
 
   const DoseCard({
     super.key,
     required this.dose,
     required this.formattedTime,
     this.onConfirm,
+    this.onUndo,
   });
 
   Color _statusColor() {
     switch (dose.doseStatus) {
-      case 'TAKEN': return AppColors.primary;
-      case 'MISSED': return Colors.red;
-      case 'DELAYED': return Colors.orange;
-      default: return AppColors.secondary.withValues(alpha: 0.6);
+      case 'TAKEN':
+        return AppColors.primary;
+      case 'MISSED':
+        return Colors.red;
+      case 'DELAYED':
+        return Colors.orange;
+      default:
+        return AppColors.secondary.withValues(alpha: 0.6);
     }
   }
 
   IconData _statusIcon() {
     switch (dose.doseStatus) {
-      case 'TAKEN': return Icons.check_circle_rounded;
-      case 'MISSED': return Icons.cancel_rounded;
-      case 'DELAYED': return Icons.watch_later_rounded;
-      default: return Icons.radio_button_unchecked_rounded;
+      case 'TAKEN':
+        return Icons.check_circle_rounded;
+      case 'MISSED':
+        return Icons.cancel_rounded;
+      case 'DELAYED':
+        return Icons.watch_later_rounded;
+      default:
+        return Icons.radio_button_unchecked_rounded;
     }
   }
 
   String _statusLabel() {
     switch (dose.doseStatus) {
-      case 'TAKEN': return 'Tomado';
-      case 'MISSED': return 'Perdido';
-      case 'DELAYED': return 'Atrasado';
-      default: return 'Pendente';
+      case 'TAKEN':
+        return 'Tomado';
+      case 'MISSED':
+        return 'Perdido';
+      case 'DELAYED':
+        return 'Atrasado';
+      default:
+        return 'Pendente';
     }
   }
 
@@ -64,7 +78,6 @@ class DoseCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
           children: [
-
             Container(
               width: 54,
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -74,8 +87,7 @@ class DoseCard extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  Icon(Icons.access_time,
-                      size: 14, color: AppColors.primary),
+                  Icon(Icons.access_time, size: 14, color: AppColors.primary),
                   const SizedBox(height: 2),
                   Text(
                     formattedTime,
@@ -115,7 +127,9 @@ class DoseCard extends StatelessWidget {
                   if (isPending && dose.withinWindow)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
@@ -138,8 +152,7 @@ class DoseCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(_statusIcon(),
-                        color: _statusColor(), size: 16),
+                    Icon(_statusIcon(), color: _statusColor(), size: 16),
                     const SizedBox(width: 4),
                     Text(
                       _statusLabel(),
@@ -157,7 +170,9 @@ class DoseCard extends StatelessWidget {
                     onTap: onConfirm,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primary,
                         borderRadius: BorderRadius.circular(20),
@@ -166,6 +181,33 @@ class DoseCard extends StatelessWidget {
                         'Tomei',
                         style: TextStyle(
                           color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                if (onUndo != null) ...[
+                  const SizedBox(height: 6),
+                  GestureDetector(
+                    onTap: onUndo,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.danger.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Text(
+                        'Desfazer',
+                        style: TextStyle(
+                          color: AppColors.danger,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),

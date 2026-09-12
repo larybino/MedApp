@@ -37,6 +37,7 @@ class ApiEndpoints {
   static const String scheduleToday = '/schedule/today';
   static const String scheduleDoses = '/schedule/doses';
   static String confirmDose(int id) => '/schedule/doses/$id/confirm';
+  static String unconfirmDose(int id) => '/schedule/doses/$id/unconfirm';
 
   static const String adherence = '/adherence';
   static const String adherencePeriod = '/adherence/period';
