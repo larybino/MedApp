@@ -56,6 +56,7 @@ public class ScheduleService {
     public Schedule update(Schedule schedule, MedicationRequest request) {
         schedule.setStartDate(request.getStartDate());
         schedule.setTreatmentDurationDays(request.getTreatmentDurationDays());
+        schedule.setScheduleStatus(ScheduleStatus.ACTIVE);
 
         if (request.getTreatmentDurationDays() > 0) {
             schedule.setEndDate(request.getStartDate().plusDays(request.getTreatmentDurationDays()));
@@ -76,6 +77,7 @@ public class ScheduleService {
         schedule.setScheduleStatus(ScheduleStatus.FINISHED);
         schedule.setEndDate(LocalDate.now());
         scheduleRepository.save(schedule);
+        clearPendingDoses(schedule);
     }
 
     public void cancel(Schedule schedule) {

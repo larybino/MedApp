@@ -110,7 +110,11 @@ class MedicationService {
       final response = await _dio.post(
         ApiEndpoints.extractMedication,
         data: formData,
-        options: Options(contentType: 'multipart/form-data'),
+        options: Options(
+          contentType: 'multipart/form-data',
+          sendTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 60),
+        ),
       );
 
       final medications = response.data['medications'] as List;

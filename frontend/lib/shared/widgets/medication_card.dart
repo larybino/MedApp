@@ -175,6 +175,7 @@ class MedicationCard extends StatelessWidget {
             ),
             if (!medication.acquisitionConfirmed ||
                 medication.scheduleStatus == 'ACTIVE' ||
+                medication.scheduleStatus == 'FINISHED' ||
                 medication.currentStock != null)
               Padding(
                 padding: const EdgeInsets.only(top: 10),
@@ -235,6 +236,24 @@ class MedicationCard extends StatelessWidget {
                             side: BorderSide(
                               color: AppColors.secondary.withValues(alpha: 0.3),
                             ),
+                          ),
+                        ),
+                      ),
+                    if (medication.scheduleStatus == 'FINISHED')
+                      TextButton.icon(
+                        onPressed: onEdit,
+                        icon: const Icon(Icons.replay_rounded, size: 16),
+                        label: const Text('Retomar tratamento'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          textStyle: const TextStyle(fontSize: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            side: const BorderSide(color: AppColors.primary),
                           ),
                         ),
                       ),
