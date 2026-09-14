@@ -52,26 +52,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return;
       }
 
+      const confirmationWord = 'EXCLUIR';
+      final confirmController = TextEditingController();
+
       final confirmed = await showDialog<bool>(
         context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Excluir conta'),
-          content: const Text('Essa ação é permanente. Deseja continuar?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text(
-                'Excluir',
-                style: TextStyle(color: AppColors.danger),
+        builder: (_) => StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            final canConfirm =
+                confirmController.text.trim().toUpperCase() == confirmationWord;
+            return AlertDialog(
+              title: const Text('Excluir conta'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Essa ação é permanente e não pode ser desfeita. '
+                    'Todos os seus dados, medicamentos e agendamentos '
+                    'serão excluídos.',
+                  ),
+                  const SizedBox(height: 16),
+                  Text.rich(
+                    TextSpan(
+                      text: 'Para confirmar, digite ',
+                      children: [
+                        const TextSpan(
+                          text: confirmationWord,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const TextSpan(text: ' abaixo:'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: confirmController,
+                    autofocus: true,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                ],
               ),
-            ),
-          ],
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, false),
+                  child: const Text('Cancelar'),
+                ),
+                TextButton(
+                  onPressed: canConfirm
+                      ? () => Navigator.pop(dialogContext, true)
+                      : null,
+                  child: const Text(
+                    'Excluir',
+                    style: TextStyle(color: AppColors.danger),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       );
+
+      confirmController.dispose();
 
       if (confirmed != true || !mounted) {
         return;

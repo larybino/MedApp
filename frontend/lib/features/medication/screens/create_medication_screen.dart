@@ -293,7 +293,6 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
       fileName = result.files.single.name;
       mimeType = 'application/pdf';
     } else {
-      // Único caminho restante além do PDF: escolha feita pela galeria.
       final picked = await _picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 85,
@@ -322,6 +321,7 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
               content: Text(
                 'Não foi possível identificar medicamentos na receita.',
               ),
+              backgroundColor: AppColors.danger,
             ),
           );
         }
@@ -440,6 +440,10 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
   }
 
   Future<void> _submit() async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
     for (final form in _forms) {
       final doseAmountValid =
           double.tryParse(
@@ -455,19 +459,16 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
           !doseAmountValid ||
           form.doseUnitController.text.isEmpty ||
           !stockValid) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Nome, dosagem, quantidade por dose, unidade e '
-              'quantidade em estoque são obrigatórios em todos os itens',
-            ),
-          ),
+        ErrorMessage.show(
+          context,
+          'Nome, dosagem, quantidade por dose, unidade e '
+          'quantidade em estoque são obrigatórios em todos os itens',
         );
+        setState(() => _isLoading = false);
         return;
       }
     }
 
-    setState(() => _isLoading = true);
     try {
       if (_isEdit) {
         final form = _forms.first;
@@ -715,7 +716,7 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
                   ),
                   const SizedBox(width: 12),
                   const Text(
-                    'Já tenho este medicamento',
+                    'Fazer agendamento',
                     style: TextStyle(color: AppColors.secondary, fontSize: 14),
                   ),
                 ],
