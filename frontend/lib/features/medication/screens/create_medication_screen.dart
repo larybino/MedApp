@@ -105,9 +105,11 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
     form.administrationRouteController.text = med.administrationRoute ?? '';
     form.pharmaceuticalFormController.text = med.pharmaceuticalForm ?? '';
     form.durationController.text = med.treatmentDurationDays?.toString() ?? '';
-    form.stockController.text = med.stockQuantity != null
-        ? _formatDoseAmount(med.stockQuantity!)
-        : '';
+    form.stockController.text = med.currentStock != null
+        ? _formatDoseAmount(med.currentStock!)
+        : (med.stockQuantity != null
+              ? _formatDoseAmount(med.stockQuantity!)
+              : '');
     form.selectedInterval = med.doseInterval;
     form.startDate = InputUtils.parseIsoDate(med.startDate);
     form.endDate = InputUtils.parseIsoDate(med.endDate);

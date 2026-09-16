@@ -3,22 +3,38 @@ import 'api_endpoints.dart';
 import '../storage/secure_storage.dart';
 
 class ApiClient {
+  static const _publicPaths = [ApiEndpoints.login, ApiEndpoints.register];
+
   static final Dio _dio =
       Dio(
           BaseOptions(
             baseUrl: ApiEndpoints.baseUrl,
-            connectTimeout: const Duration(seconds: 20),
-            receiveTimeout: const Duration(seconds: 20),
+            connectTimeout: const Duration(seconds: 10),
+            receiveTimeout: const Duration(seconds: 10),
             headers: {'Content-Type': 'application/json'},
           ),
         )
         ..interceptors.add(
           InterceptorsWrapper(
             onRequest: (options, handler) async {
-              final token = await SecureStorage.getToken();
-              if (token != null) {
-                options.headers['Authorization'] = 'Bearer $token';
+              final isPublic = _publicPaths.any(
+                (path) => options.path.startsWith(path),
+              );
+
+              if (!isPublic) {
+                String? token;
+                try {
+                  token = await SecureStorage.getToken().timeout(
+                    const Duration(seconds: 3),
+                  );
+                } catch (_) {
+                  token = null;
+                }
+                if (token != null) {
+                  options.headers['Authorization'] = 'Bearer $token';
+                }
               }
+
               return handler.next(options);
             },
             onError: (error, handler) {

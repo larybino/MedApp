@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'jwt_helper.dart';
 
 class SecureStorage {
   static const _storage = FlutterSecureStorage();
@@ -8,11 +9,9 @@ class SecureStorage {
   static Future<void> saveToken(String token) =>
       _storage.write(key: _tokenKey, value: token);
 
-  static Future<String?> getToken() =>
-      _storage.read(key: _tokenKey);
+  static Future<String?> getToken() => _storage.read(key: _tokenKey);
 
-  static Future<void> deleteToken() =>
-      _storage.delete(key: _tokenKey);
+  static Future<void> deleteToken() => _storage.delete(key: _tokenKey);
 
   static Future<void> saveUserId(int id) =>
       _storage.write(key: _userIdKey, value: id.toString());
@@ -25,13 +24,13 @@ class SecureStorage {
   static Future<void> saveRole(String role) =>
       _storage.write(key: 'user_role', value: role);
 
-  static Future<String?> getRole() =>
-      _storage.read(key: 'user_role');
+  static Future<String?> getRole() => _storage.read(key: 'user_role');
 
   static Future<void> clear() => _storage.deleteAll();
 
   static Future<bool> isLoggedIn() async {
     final token = await getToken();
-    return token != null && token.isNotEmpty;
+    if (token == null || token.isEmpty) return false;
+    return !JwtHelper.isExpired(token);
   }
 }

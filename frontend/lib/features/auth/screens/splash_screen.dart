@@ -1,14 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/core/routing/routes.dart';
+import 'package:frontend/core/storage/jwt_helper.dart';
+import 'package:frontend/core/storage/secure_storage.dart';
 import 'package:frontend/shared/widgets/index.dart';
 import '../../../core/theme/app_colors.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  bool _isChecking = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkSession());
+  }
+
+  Future<void> _checkSession() async {
+    final token = await SecureStorage.getToken();
+
+    if (token != null && token.isNotEmpty && !JwtHelper.isExpired(token)) {
+      if (mounted) context.go(Routes.home);
+      return;
+    }
+
+    if (token != null && token.isNotEmpty) {
+      await SecureStorage.clear();
+    }
+
+    if (mounted) setState(() => _isChecking = false);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isChecking) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
