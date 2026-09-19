@@ -21,6 +21,8 @@ class _AlarmScreenState extends State<AlarmScreen>
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
+  bool _isProcessing = false;
+
   @override
   void initState() {
     super.initState();
@@ -42,9 +44,25 @@ class _AlarmScreenState extends State<AlarmScreen>
   }
 
   Future<void> _stopAlarm() async {
-    await Alarm.stop(widget.alarmSettings.id);
+    if (_isProcessing) {
+      debugPrint('[AlarmScreen] _stopAlarm ignorado: já processando (dose ${widget.alarmSettings.id})');
+      return;
+    }
+    _isProcessing = true;
 
-    if (!mounted) return;
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final scheduleProvider = context.read<ScheduleProvider>();
+    final doseId = widget.alarmSettings.id;
+
+    debugPrint('[AlarmScreen] _stopAlarm iniciado (dose $doseId)');
+    await Alarm.stop(doseId);
+
+    if (!mounted) {
+      debugPrint('[AlarmScreen] unmounted logo após Alarm.stop (dose $doseId) — diálogo não será exibido');
+      _isProcessing = false;
+      return;
+    }
 
     final tomou = await showDialog<bool>(
       context: context,
@@ -58,7 +76,7 @@ class _AlarmScreenState extends State<AlarmScreen>
             child: const Text('Ainda não'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true), 
+            onPressed: () => Navigator.pop(context, true),
             child: const Text(
               'Sim, tomei!',
               style: TextStyle(
@@ -71,56 +89,68 @@ class _AlarmScreenState extends State<AlarmScreen>
       ),
     );
 
-    if (!mounted) return;
+    debugPrint('[AlarmScreen] diálogo fechado (dose $doseId), resposta=$tomou, mounted=$mounted');
 
     if (tomou == true) {
       try {
-        await context.read<ScheduleProvider>().confirmDose(widget.alarmSettings.id);
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Dose confirmada com sucesso!')),
-          );
-          Navigator.pop(context); 
-        }
+        await scheduleProvider.confirmDose(doseId);
+        debugPrint('[AlarmScreen] confirmDose OK (dose $doseId)');
+
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Dose confirmada com sucesso!')),
+        );
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Erro ao confirmar: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-          Navigator.pop(context); 
-        }
-      }
-    } else {
-      await _snooze();
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Alarme adiado para daqui a 10 minutos')),
+        debugPrint('[AlarmScreen] confirmDose FALHOU (dose $doseId): $e');
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('Erro ao confirmar: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
+    } else if (tomou == false) {
+      await _doSnooze(doseId);
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Alarme adiado para daqui a 10 minutos')),
+      );
+    } else {
+      debugPrint('[AlarmScreen] diálogo retornou null (dose $doseId) — nenhuma ação tomada');
     }
+
+  
+    if (navigator.canPop()) {
+      navigator.pop();
+    }
+    _isProcessing = false;
   }
 
   Future<void> _snooze() async {
-    await Alarm.stop(widget.alarmSettings.id);
+    if (_isProcessing) {
+      debugPrint('[AlarmScreen] _snooze ignorado: já processando (dose ${widget.alarmSettings.id})');
+      return;
+    }
+    _isProcessing = true;
+    final navigator = Navigator.of(context);
+    await _doSnooze(widget.alarmSettings.id);
+    if (navigator.canPop()) {
+      navigator.pop();
+    }
+    _isProcessing = false;
+  }
 
-    final snoozeTime = DateTime.now().add(
-      const Duration(minutes: 10),
-    );
+
+  Future<void> _doSnooze(int doseId) async {
+    debugPrint('[AlarmScreen] adiando alarme (dose $doseId)');
+    await Alarm.stop(doseId);
+
+    final snoozeTime = DateTime.now().add(const Duration(minutes: 10));
 
     await Alarm.set(
       alarmSettings: widget.alarmSettings.copyWith(
         dateTime: snoozeTime,
       ),
     );
-
-    if (mounted) {
-      Navigator.pop(context);
-    }
+    debugPrint('[AlarmScreen] alarme reagendado para $snoozeTime (dose $doseId)');
   }
 
   @override
