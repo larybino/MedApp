@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:frontend/core/state/member_provider.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/features/members/screens/create_members_screen.dart';
+import 'package:frontend/features/members/screens/edit_members_screen.dart';
+import 'package:frontend/features/models/user_model.dart';
+import 'package:frontend/features/user/screens/edit_user_screen.dart';
 import 'package:provider/provider.dart';
 
 class MembersScreen extends StatefulWidget {
@@ -54,6 +57,16 @@ class _MembersScreenState extends State<MembersScreen> {
           );
         }
       }
+    }
+  }
+
+  Future<void> _editMember(UserModel member) async {
+    final updated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => EditMembersScreen(member: member)),
+    );
+    if (updated == true && mounted) {
+      context.read<MemberProvider>().loadMembers();
     }
   }
 
@@ -146,9 +159,24 @@ class _MembersScreenState extends State<MembersScreen> {
                     ],
                   ),
 
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () => _confirmRemove(member.id, member.name),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.edit_outlined,
+                          color: AppColors.primary,
+                        ),
+                        onPressed: () => _editMember(member),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                        ),
+                        onPressed: () => _confirmRemove(member.id, member.name),
+                      ),
+                    ],
                   ),
                 );
               },
