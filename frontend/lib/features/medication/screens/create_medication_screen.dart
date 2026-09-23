@@ -6,6 +6,7 @@ import 'package:frontend/core/state/medication_provider.dart';
 import 'package:frontend/core/state/schedule_provider.dart';
 import 'package:frontend/core/state/user_provider.dart';
 import 'package:frontend/core/state/member_provider.dart';
+import 'package:frontend/core/storage/secure_storage.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/features/medication/screens/medication_list_screen.dart';
 import 'package:frontend/features/models/medication_model.dart';
@@ -50,7 +51,6 @@ class _MedicationFormData {
   DateTime? endDate;
   Uint8List? medicationImageBytes;
   String? medicationImageBase64;
-  bool acquisitionConfirmed = false;
 
   bool needsManualIntervalReview = false;
   bool needsManualDosageReview = false;
@@ -115,9 +115,6 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
     form.endDate = InputUtils.parseIsoDate(med.endDate);
     form.startTime = InputUtils.parseTime(med.startTime);
     form.medicationImageBase64 = med.medicationImage;
-    form.acquisitionConfirmed = widget.confirmAcquisitionMode
-        ? true
-        : med.acquisitionConfirmed;
 
     if (med.treatmentDurationDays != null && med.treatmentDurationDays! > 0) {
       form.durationType = 'DAYS';
@@ -233,6 +230,26 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
       isMaster: true,
       memberIds: memberProvider.members.map((m) => m.id).toList(),
     );
+  }
+
+  Future<void> _refreshHomeSchedule() async {
+    final scheduleProvider = context.read<ScheduleProvider>();
+    final currentlyDisplayedUserId = scheduleProvider.currentUserId;
+
+    // Home ainda não carregou nada nesta sessão — não há o que preservar,
+    // ela vai buscar os dados certos sozinha quando for aberta.
+    if (currentlyDisplayedUserId == null) return;
+
+    final selfId = await SecureStorage.getUserId();
+    final medicationTargetUserId = _selectedTargetUserId ?? selfId;
+
+    // Só atualiza a lista compartilhada se o medicamento cadastrado é do
+    // mesmo usuário que está sendo exibido agora (ex: "Eu" ou o membro
+    // selecionado). Caso contrário, deixamos a Home como está para não
+    // trocar a lista de quem está sendo visualizado por outra pessoa.
+    if (medicationTargetUserId != currentlyDisplayedUserId) return;
+
+    await scheduleProvider.loadTodayDoses(userId: _selectedTargetUserId);
   }
 
   Future<void> _scanPrescription() async {
@@ -429,7 +446,10 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
           form.stockController.text.replaceAll(',', '.'),
         ),
       if (_selectedTargetUserId != null) 'userId': _selectedTargetUserId,
-      'acquisitionConfirmed': form.acquisitionConfirmed,
+      'acquisitionConfirmed':
+          widget.confirmAcquisitionMode ||
+          form.startDate != null ||
+          form.startTime != null,
     };
   }
 
@@ -486,6 +506,7 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
         }
       }
       await _syncNotifications();
+      await _refreshHomeSchedule();
       if (mounted) {
         if (Navigator.of(context).canPop()) {
           Navigator.pop(context, {
@@ -601,8 +622,6 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
                 ),
               ],
 
-              SectionTitle(title: 'Dados principais'),
-              const SizedBox(height: 8),
               CustomTextField(
                 label: 'Nome do medicamento *',
                 controller: _forms[i].nameController,
@@ -672,86 +691,41 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
               ],
               SizedBox(height: height * 0.02),
 
-              SectionTitle(title: 'Agendamento'),
+              SectionTitle(title: 'Início do tratamento'),
+              const SizedBox(height: 4),
+              Text(
+                'Opcional: preencha a data e o horário para que o '
+                'medicamento entre automaticamente na agenda.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.secondary.withValues(alpha: 0.6),
+                ),
+              ),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  GestureDetector(
-                    onTap: widget.confirmAcquisitionMode
-                        ? null
-                        : () => setState(
-                            () => _forms[i].acquisitionConfirmed =
-                                !_forms[i].acquisitionConfirmed,
-                          ),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 52,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
-                        color: _forms[i].acquisitionConfirmed
-                            ? AppColors.primary
-                            : AppColors.secondary.withValues(alpha: 0.2),
-                      ),
-                      child: AnimatedAlign(
-                        duration: const Duration(milliseconds: 200),
-                        alignment: _forms[i].acquisitionConfirmed
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.all(3),
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 4,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                  Expanded(
+                    child: DateTimeButton(
+                      icon: Icons.calendar_today,
+                      label: _forms[i].startDate != null
+                          ? '${_forms[i].startDate!.day.toString().padLeft(2, '0')}/${_forms[i].startDate!.month.toString().padLeft(2, '0')}/${_forms[i].startDate!.year}'
+                          : 'Data início',
+                      onTap: () => _pickDate(i),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Text(
-                    'Fazer agendamento',
-                    style: TextStyle(color: AppColors.secondary, fontSize: 14),
+                  Expanded(
+                    child: DateTimeButton(
+                      icon: Icons.access_time,
+                      label: _forms[i].startTime != null
+                          ? '${_forms[i].startTime!.hour.toString().padLeft(2, '0')}:${_forms[i].startTime!.minute.toString().padLeft(2, '0')}'
+                          : 'Horário',
+                      onTap: () => _pickTime(i),
+                    ),
                   ),
                 ],
               ),
               SizedBox(height: height * 0.02),
-
-              if (_forms[i].acquisitionConfirmed) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: DateTimeButton(
-                        icon: Icons.calendar_today,
-                        label: _forms[i].startDate != null
-                            ? '${_forms[i].startDate!.day.toString().padLeft(2, '0')}/${_forms[i].startDate!.month.toString().padLeft(2, '0')}/${_forms[i].startDate!.year}'
-                            : 'Data início',
-                        onTap: () => _pickDate(i),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: DateTimeButton(
-                        icon: Icons.access_time,
-                        label: _forms[i].startTime != null
-                            ? '${_forms[i].startTime!.hour.toString().padLeft(2, '0')}:${_forms[i].startTime!.minute.toString().padLeft(2, '0')}'
-                            : 'Horário',
-                        onTap: () => _pickTime(i),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: height * 0.02),
-              ],
 
               SectionTitle(title: 'Término do tratamento'),
               const SizedBox(height: 8),
@@ -797,7 +771,7 @@ class _CreateMedicationScreenState extends State<CreateMedicationScreen> {
               SectionTitle(title: 'Estoque'),
               const SizedBox(height: 8),
               CustomTextField(
-                label: 'Quantidade inicial * (mesma unidade da dose)',
+                label: 'Quantidade atual * (mesma unidade da dose)',
                 controller: _forms[i].stockController,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 
 class SectionTitle extends StatelessWidget {
@@ -10,11 +11,11 @@ class SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.secondary,
-            fontWeight: FontWeight.w700,
-            fontSize: 13,
-          ),
+      style: GoogleFonts.dmSans(
+        color: AppColors.secondary,
+        fontWeight: FontWeight.w700,
+        fontSize: 18,
+      ),
     );
   }
 }
