@@ -17,4 +17,5 @@ public interface ScheduleDoseRepository extends JpaRepository<ScheduleDose, Long
     boolean existsBySchedule_IdAndScheduledDateAndScheduledTime(Long scheduleId, LocalDate date, LocalTime time);
     List<ScheduleDose> findBySchedule_Medication_UserIdAndScheduledDateLessThanEqualAndDoseStatus(Long userId, LocalDate date, DoseStatus status);
     List<ScheduleDose> findByDoseStatus(DoseStatus doseStatus);
+    List<ScheduleDose> findBySchedule_Medication_UserIdAndScheduledDateBetweenOrderByScheduledDateAscScheduledTimeAsc(Long userId, LocalDate from, LocalDate to);
 }

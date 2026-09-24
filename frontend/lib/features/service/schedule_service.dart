@@ -38,6 +38,24 @@ class ScheduleService {
     }
   }
 
+  Future<List<ScheduledDoseModel>> getDosesInRange(
+    int userId,
+    String from,
+    String to,
+  ) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.scheduleRange,
+        queryParameters: {'userId': userId, 'from': from, 'to': to},
+      );
+      return (response.data as List)
+          .map((e) => ScheduledDoseModel.fromJson(e))
+          .toList();
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handle(e);
+    }
+  }
+
   Future<ScheduledDoseModel> confirmDose(int doseId) async {
     try {
       final response = await _dio.put(ApiEndpoints.confirmDose(doseId));

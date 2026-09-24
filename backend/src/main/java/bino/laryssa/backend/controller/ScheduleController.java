@@ -36,6 +36,16 @@ public class ScheduleController {
         return ResponseEntity.ok(doses.stream().map(ScheduleDoseResponse::toResponse).toList());
     }
 
+    @GetMapping("/range")
+    public ResponseEntity<List<ScheduleDoseResponse>> getDosesInRange(
+            @RequestParam Long userId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) DoseStatus status) {
+        List<ScheduleDose> doses = scheduleService.getDosesInRange(userId, from, to, status);
+        return ResponseEntity.ok(doses.stream().map(ScheduleDoseResponse::toResponse).toList());
+    }
+
     @PutMapping("/doses/{id}/confirm")
     public ResponseEntity<ScheduleDoseResponse> confirmDose(@PathVariable Long id) {
         ScheduleDose dose = scheduleService.confirmDose(id);

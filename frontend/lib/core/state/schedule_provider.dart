@@ -11,9 +11,12 @@ class ScheduleProvider extends ChangeNotifier {
 
   List<ScheduledDoseModel> _doses = [];
   bool _isLoading = false;
+  int? _currentUserId;
 
   List<ScheduledDoseModel> get doses => _doses;
   bool get isLoading => _isLoading;
+
+  int? get currentUserId => _currentUserId;
 
   List<ScheduledDoseModel> get pendingDoses =>
       _doses.where((d) => d.doseStatus == 'PENDING').toList();
@@ -36,6 +39,7 @@ class ScheduleProvider extends ChangeNotifier {
 
     try {
       _doses = await _service.getTodayDoses(targetId);
+      _currentUserId = targetId;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -51,6 +55,7 @@ class ScheduleProvider extends ChangeNotifier {
 
     try {
       _doses = await _service.getDosesByDate(targetId, date);
+      _currentUserId = targetId;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -77,6 +82,11 @@ class ScheduleProvider extends ChangeNotifier {
     await loadTodayDoses(userId: userId);
   }
 
+  static const int _alarmSyncWindowDays = 30;
+
+  static String _formatDate(DateTime date) =>
+      '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
   Future<void> syncNotifications({
     required bool isMaster,
     required List<int> memberIds,
@@ -98,9 +108,18 @@ class ScheduleProvider extends ChangeNotifier {
       userIdsToNotify.addAll(memberIds);
     }
 
+    final today = DateTime.now();
+    final horizon = today.add(const Duration(days: _alarmSyncWindowDays));
+
     final allDoses = <ScheduledDoseModel>[];
     for (final id in userIdsToNotify) {
-      allDoses.addAll(await _service.getTodayDoses(id));
+      allDoses.addAll(
+        await _service.getDosesInRange(
+          id,
+          _formatDate(today),
+          _formatDate(horizon),
+        ),
+      );
     }
 
     await AlarmService.scheduleAllDoses(allDoses);

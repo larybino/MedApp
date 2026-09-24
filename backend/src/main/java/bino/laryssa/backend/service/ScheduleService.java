@@ -49,7 +49,7 @@ public class ScheduleService {
         }
 
         Schedule saved = scheduleRepository.save(schedule);
-        generateDosesPerPeriod(saved, LocalDate.now(), LocalDate.now().plusDays(7));
+        generateDosesPerPeriod(saved, LocalDate.now(), initialWindowEnd(saved));
         return saved;
     }
 
@@ -68,7 +68,7 @@ public class ScheduleService {
 
         Schedule updatedSchedule = scheduleRepository.save(schedule);
         clearPendingDoses(updatedSchedule);
-        generateDosesPerPeriod(updatedSchedule, LocalDate.now(), LocalDate.now().plusDays(7));
+        generateDosesPerPeriod(updatedSchedule, LocalDate.now(), initialWindowEnd(updatedSchedule));
 
         return updatedSchedule;
     }
@@ -87,6 +87,15 @@ public class ScheduleService {
 
     public List<ScheduleDose> getDosesPerDay(Long userId, LocalDate date, DoseStatus status) {
         return scheduleDoseRepository.findBySchedule_Medication_UserIdAndScheduledDateOrderByScheduledTimeAsc(userId, date)
+            .stream()
+            .filter(dose -> dose.getSchedule().getScheduleStatus() != ScheduleStatus.CANCELLED)
+            .filter(dose -> status == null || dose.getDoseStatus() == status)
+            .toList();
+    }
+
+    public List<ScheduleDose> getDosesInRange(Long userId, LocalDate from, LocalDate to, DoseStatus status) {
+        return scheduleDoseRepository
+            .findBySchedule_Medication_UserIdAndScheduledDateBetweenOrderByScheduledDateAscScheduledTimeAsc(userId, from, to)
             .stream()
             .filter(dose -> dose.getSchedule().getScheduleStatus() != ScheduleStatus.CANCELLED)
             .filter(dose -> status == null || dose.getDoseStatus() == status)
@@ -141,6 +150,32 @@ public class ScheduleService {
         return dose;
     }
 
+    private boolean isContinuousUse(Schedule schedule) {
+        return schedule.getTreatmentDurationDays() <= 0 && schedule.getEndDate() == null;
+    }
+
+    private LocalDate initialWindowEnd(Schedule schedule) {
+        int windowDays = isContinuousUse(schedule) ? 30 : 7;
+        return LocalDate.now().plusDays(windowDays);
+    }
+
+    private Integer stockDoseBudget(Schedule schedule) {
+        Medication medication = schedule.getMedication();
+        Double currentStock = medication.getCurrentStock();
+        Double doseAmount = medication.getDoseAmount();
+
+        if (currentStock == null || doseAmount == null || doseAmount <= 0) {
+            return null;
+        }
+
+        int stockCoveredDoses = (int) Math.floor(currentStock / doseAmount);
+        int alreadyPending = scheduleDoseRepository
+                .findBySchedule_IdAndDoseStatus(schedule.getId(), DoseStatus.PENDING)
+                .size();
+
+        return Math.max(stockCoveredDoses - alreadyPending, 0);
+    }
+
     private void generateDosesPerPeriod(Schedule schedule, LocalDate from, LocalDate to) {
         if (schedule.getMedication() == null || schedule.getMedication().getStartTime() == null) {
             return;
@@ -163,7 +198,13 @@ public class ScheduleService {
         int intervalHours = getIntervalHours(schedule.getMedication());
         List<ScheduleDose> dosesToSave = new ArrayList<>();
 
+        Integer stockBudget = isContinuousUse(schedule) ? stockDoseBudget(schedule) : null;
+
         while (currentDose.isBefore(limit)) {
+            if (stockBudget != null && dosesToSave.size() >= stockBudget) {
+                break;
+            }
+
             if (!currentDose.toLocalDate().isBefore(from)) {
                 LocalDate doseDate = currentDose.toLocalDate();
                 LocalTime doseTime = currentDose.toLocalTime();

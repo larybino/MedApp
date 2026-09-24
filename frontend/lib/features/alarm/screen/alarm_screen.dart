@@ -22,6 +22,7 @@ class _AlarmScreenState extends State<AlarmScreen>
   late Animation<double> _pulseAnimation;
 
   bool _isProcessing = false;
+  bool _isConfirming = false;
 
   @override
   void initState() {
@@ -92,6 +93,7 @@ class _AlarmScreenState extends State<AlarmScreen>
     debugPrint('[AlarmScreen] diálogo fechado (dose $doseId), resposta=$tomou, mounted=$mounted');
 
     if (tomou == true) {
+      if (mounted) setState(() => _isConfirming = true);
       try {
         await scheduleProvider.confirmDose(doseId);
         debugPrint('[AlarmScreen] confirmDose OK (dose $doseId)');
@@ -99,28 +101,35 @@ class _AlarmScreenState extends State<AlarmScreen>
         messenger.showSnackBar(
           const SnackBar(content: Text('Dose confirmada com sucesso!')),
         );
+        if (navigator.canPop()) {
+          navigator.pop();
+        }
       } catch (e) {
         debugPrint('[AlarmScreen] confirmDose FALHOU (dose $doseId): $e');
         messenger.showSnackBar(
           SnackBar(
-            content: Text('Erro ao confirmar: $e'),
+            content: Text(
+              'Erro ao confirmar: $e\nToque em "Parar alarme" para tentar novamente.',
+            ),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 6),
           ),
         );
+      } finally {
+        if (mounted) setState(() => _isConfirming = false);
       }
     } else if (tomou == false) {
       await _doSnooze(doseId);
       messenger.showSnackBar(
         const SnackBar(content: Text('Alarme adiado para daqui a 10 minutos')),
       );
+      if (navigator.canPop()) {
+        navigator.pop();
+      }
     } else {
       debugPrint('[AlarmScreen] diálogo retornou null (dose $doseId) — nenhuma ação tomada');
     }
 
-  
-    if (navigator.canPop()) {
-      navigator.pop();
-    }
     _isProcessing = false;
   }
 
@@ -251,7 +260,7 @@ class _AlarmScreenState extends State<AlarmScreen>
                 const SizedBox(height: 32),
 
                 GestureDetector(
-                  onTap: _stopAlarm,
+                  onTap: _isConfirming ? null : _stopAlarm,
                   child: Container(
                     width: 96,
                     height: 96,
@@ -266,18 +275,26 @@ class _AlarmScreenState extends State<AlarmScreen>
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.stop_rounded,
-                      color: Colors.white,
-                      size: 48,
-                    ),
+                    child: _isConfirming
+                        ? const Padding(
+                            padding: EdgeInsets.all(28),
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 3,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.stop_rounded,
+                            color: Colors.white,
+                            size: 48,
+                          ),
                   ),
                 ),
 
                 const SizedBox(height: 16),
 
                 Text(
-                  'Parar alarme',
+                  _isConfirming ? 'Confirmando...' : 'Parar alarme',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 14,
