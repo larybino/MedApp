@@ -10,11 +10,10 @@ import 'package:frontend/features/service/notification_service.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
+import 'core/routing/navigator_key.dart';
 import 'core/routing/routes.dart';
 import 'core/state/user_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

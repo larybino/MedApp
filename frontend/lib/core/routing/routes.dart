@@ -16,7 +16,7 @@ import 'package:frontend/features/auth/screens/splash_screen.dart';
 import 'package:frontend/features/settings/screens/settings_screen.dart';
 import 'package:frontend/features/user/screens/edit_user_screen.dart';
 import 'package:frontend/features/user/screens/user_profile_screen.dart';
-import 'package:frontend/main.dart';
+import 'navigator_key.dart';
 class Routes {
   static const String splash = '/splash';
   static const String home = '/home';

@@ -1,8 +1,11 @@
+import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/core/routing/routes.dart';
 import 'package:frontend/core/storage/jwt_helper.dart';
 import 'package:frontend/core/storage/secure_storage.dart';
+import 'package:frontend/core/routing/navigator_key.dart';
+import 'package:frontend/features/alarm/screen/alarm_screen.dart';
 import 'package:frontend/shared/widgets/index.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -27,6 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (token != null && token.isNotEmpty && !JwtHelper.isExpired(token)) {
       if (mounted) context.go(Routes.home);
+      await _showRingingAlarmIfAny();
       return;
     }
 
@@ -35,6 +39,20 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     if (mounted) setState(() => _isChecking = false);
+  }
+
+  Future<void> _showRingingAlarmIfAny() async {
+    final alarms = await Alarm.getAlarms();
+    for (final alarm in alarms) {
+      if (await Alarm.isRinging(alarm.id)) {
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (_) => AlarmScreen(alarmSettings: alarm),
+          ),
+        );
+      }
+    }
   }
 
   @override
