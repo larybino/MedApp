@@ -53,6 +53,24 @@ class ApiClient {
               final hadAuthHeader =
                   error.requestOptions.headers['Authorization'] != null;
 
+            
+              final isConnectionIssue =
+                  error.type == DioExceptionType.connectionError ||
+                  error.type == DioExceptionType.connectionTimeout ||
+                  error.type == DioExceptionType.receiveTimeout ||
+                  error.type == DioExceptionType.sendTimeout;
+
+              if (isConnectionIssue && !alreadyRetried) {
+                await Future.delayed(const Duration(seconds: 2));
+                final retryOptions = error.requestOptions;
+                retryOptions.extra[_retriedFlag] = true;
+                try {
+                  final response = await _dio.fetch(retryOptions);
+                  return handler.resolve(response);
+                } catch (_) {
+                }
+              }
+
               if (error.response?.statusCode == 401 &&
                   !isPublic &&
                   !alreadyRetried) {

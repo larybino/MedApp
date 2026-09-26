@@ -4,7 +4,6 @@ import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/features/members/screens/create_members_screen.dart';
 import 'package:frontend/features/members/screens/edit_members_screen.dart';
 import 'package:frontend/features/models/user_model.dart';
-import 'package:frontend/features/user/screens/edit_user_screen.dart';
 import 'package:provider/provider.dart';
 
 class MembersScreen extends StatefulWidget {
@@ -14,13 +13,38 @@ class MembersScreen extends StatefulWidget {
   State<MembersScreen> createState() => _MembersScreenState();
 }
 
-class _MembersScreenState extends State<MembersScreen> {
+class _MembersScreenState extends State<MembersScreen>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MemberProvider>().loadMembers();
-    });
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _runReload());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      Future.delayed(const Duration(milliseconds: 800), _runReload);
+    }
+  }
+
+  Future<void> _runReload() async {
+    try {
+      await context.read<MemberProvider>().loadMembers();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   Future<void> _confirmRemove(int memberId, String name) async {

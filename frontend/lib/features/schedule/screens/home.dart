@@ -71,9 +71,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-
     if (state == AppLifecycleState.resumed) {
-      _runInitialization();
+      Future.delayed(const Duration(milliseconds: 800), _runInitialization);
     }
   }
 

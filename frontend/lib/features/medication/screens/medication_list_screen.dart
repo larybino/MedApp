@@ -59,7 +59,7 @@ class _MedicationListScreenState extends State<MedicationListScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initializeScreen());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _runInitialization());
   }
 
   @override
@@ -71,7 +71,19 @@ class _MedicationListScreenState extends State<MedicationListScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _initializeScreen();
+      Future.delayed(const Duration(milliseconds: 800), _runInitialization);
+    }
+  }
+
+ Future<void> _runInitialization() async {
+    try {
+      await _initializeScreen();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 

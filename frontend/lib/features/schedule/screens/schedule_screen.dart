@@ -57,7 +57,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _runInitialization();
+      Future.delayed(const Duration(milliseconds: 800), _runInitialization);
     }
   }
 
