@@ -17,6 +17,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int? _selectedMemberId;
   String? _statusFilter;
+  bool _isInitializing = true;
+  String? _initError;
 
   void _toggleStatusFilter(String status) {
     setState(() {
@@ -42,18 +44,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _onRefresh() async {
-    await _reload();
-
-    final userProvider = context.read<UserProvider>();
-    if (userProvider.isMaster) {
-      await context.read<MemberProvider>().loadMembers();
+    try {
+      await _initializeScreen();
+      if (mounted) setState(() => _initError = null);
+    } catch (e) {
+      if (mounted) setState(() => _initError = e.toString());
     }
-
-    final memberProvider = context.read<MemberProvider>();
-    await context.read<ScheduleProvider>().syncNotifications(
-      isMaster: userProvider.isMaster,
-      memberIds: memberProvider.members.map((m) => m.id).toList(),
-    );
   }
 
   @override
@@ -77,14 +73,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _runInitialization() async {
+    if (mounted) setState(() => _isInitializing = true);
     try {
       await _initializeScreen();
+      if (mounted) setState(() => _initError = null);
     } catch (e) {
       if (mounted) {
+        setState(() => _initError = e.toString());
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isInitializing = false);
     }
   }
 
@@ -316,8 +317,65 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
 
           Expanded(
-            child: provider.isLoading
-                ? const Center(child: CircularProgressIndicator())
+            child: (_isInitializing || provider.isLoading)
+                ? const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text(
+                          'Carregando seus medicamentos...',
+                          style: TextStyle(color: AppColors.secondary),
+                        ),
+                      ],
+                    ),
+                  )
+                : ((_initError != null || provider.loadError != null) &&
+                      displayedDoses.isEmpty)
+                ? RefreshIndicator(
+                    onRefresh: _onRefresh,
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      children: [
+                        const SizedBox(height: 100),
+                        const Icon(
+                          Icons.cloud_off_outlined,
+                          size: 64,
+                          color: AppColors.danger,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Não foi possível carregar seus medicamentos agora.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppColors.secondary,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Isso costuma acontecer quando o servidor '
+                          'estava inativo há um tempo. Puxe pra baixo '
+                          'ou toque no botão para tentar de novo.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppColors.secondary.withValues(alpha: 0.7),
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Center(
+                          child: OutlinedButton.icon(
+                            onPressed: _onRefresh,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Tentar novamente'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
                 : RefreshIndicator(
                     onRefresh: _onRefresh,
                     child: displayedDoses.isEmpty

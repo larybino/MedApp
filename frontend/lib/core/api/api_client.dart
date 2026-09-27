@@ -6,6 +6,13 @@ class ApiClient {
   static const _publicPaths = [ApiEndpoints.login, ApiEndpoints.register];
 
   static const _retriedFlag = 'apiClientRetried';
+  static const _connRetryCountKey = 'apiClientConnRetryCount';
+
+  static const _connRetryDelays = [
+    Duration(seconds: 3),
+    Duration(seconds: 6),
+    Duration(seconds: 10),
+  ];
 
   static Future<String?> _readTokenWithRetry() async {
     try {
@@ -53,17 +60,20 @@ class ApiClient {
               final hadAuthHeader =
                   error.requestOptions.headers['Authorization'] != null;
 
-            
               final isConnectionIssue =
                   error.type == DioExceptionType.connectionError ||
                   error.type == DioExceptionType.connectionTimeout ||
                   error.type == DioExceptionType.receiveTimeout ||
                   error.type == DioExceptionType.sendTimeout;
 
-              if (isConnectionIssue && !alreadyRetried) {
-                await Future.delayed(const Duration(seconds: 2));
+              final connRetryCount =
+                  (error.requestOptions.extra[_connRetryCountKey] as int?) ??
+                  0;
+
+              if (isConnectionIssue && connRetryCount < _connRetryDelays.length) {
+                await Future.delayed(_connRetryDelays[connRetryCount]);
                 final retryOptions = error.requestOptions;
-                retryOptions.extra[_retriedFlag] = true;
+                retryOptions.extra[_connRetryCountKey] = connRetryCount + 1;
                 try {
                   final response = await _dio.fetch(retryOptions);
                   return handler.resolve(response);
