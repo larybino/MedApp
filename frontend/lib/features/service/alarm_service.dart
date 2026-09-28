@@ -58,7 +58,11 @@ class AlarmService {
 
     for (final dose in doses) {
       if (dose.doseStatus == 'PENDING') {
-        await scheduleAlarm(dose);
+        try {
+          await scheduleAlarm(dose);
+        } catch (e) {
+          print('[AlarmService] Falha ao agendar alarme da dose ${dose.id}: $e');
+        }
       }
     }
   }

@@ -7,6 +7,7 @@ enum ButtonVariant { primary, secondary }
 class AppButton extends StatelessWidget {
   final String label;
   final VoidCallback onPressed;
+  final IconData? icon;
   final bool isLoading;
   final ButtonVariant variant;
 
@@ -14,6 +15,7 @@ class AppButton extends StatelessWidget {
     super.key,
     required this.label,
     required this.onPressed,
+    this.icon,
     this.isLoading = false,
     this.variant = ButtonVariant.primary,
   });
@@ -33,7 +35,7 @@ class AppButton extends StatelessWidget {
           foregroundColor: foregroundColor,
           disabledBackgroundColor: backgroundColor,
           disabledForegroundColor: foregroundColor,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
@@ -47,12 +49,25 @@ class AppButton extends StatelessWidget {
                   valueColor: AlwaysStoppedAnimation<Color>(foregroundColor),
                 ),
               )
-            : Text(
-                label,
-                style: GoogleFonts.syne(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                ),
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 20),
+                    const SizedBox(width: 10),
+                  ],
+                  Flexible(
+                    child: Text(
+                      label,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.syne(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
               ),
       ),
     );

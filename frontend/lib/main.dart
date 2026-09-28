@@ -1,10 +1,13 @@
 import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/core/routing/alarm_navigator.dart';
 import 'package:frontend/core/state/adherence_provider.dart';
 import 'package:frontend/core/state/member_provider.dart';
 import 'package:frontend/core/state/medication_provider.dart';
 import 'package:frontend/core/state/schedule_provider.dart';
-import 'package:frontend/features/alarm/screen/alarm_screen.dart';
+import 'package:frontend/core/storage/alarm_reliability_preferences.dart';
+import 'package:frontend/features/service/alarm_launch_service.dart';
+import 'package:frontend/features/service/alarm_reliability_service.dart';
 import 'package:frontend/features/service/alarm_service.dart';
 import 'package:frontend/features/service/notification_service.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -30,7 +33,7 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Future<void> _requestPermissions() async {
     await Permission.notification.request();
     await Permission.systemAlertWindow.request();
@@ -40,25 +43,83 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+ Future<void> _maybeShowAlarmReliabilityPrompt() async {
+    final alreadyAsked = await AlarmReliabilityPreferences.getAlreadyAsked();
+    if (alreadyAsked) return;
+
+    await Future.delayed(const Duration(seconds: 2));
+    final dialogContext = navigatorKey.currentContext;
+    if (dialogContext == null || !dialogContext.mounted) return;
+
+    await showDialog<void>(
+      context: dialogContext,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: const Text('Alarmes mais confiáveis'),
+        content: const Text(
+          'Alguns celulares bloqueiam esse tipo de alarme por padrão, o '
+          'que pode fazer a tela do remédio não abrir sozinha na hora '
+          'certa. Vamos te levar a algumas telas de configuração rápidas '
+          'pra evitar isso — é só confirmar em cada uma.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Agora não'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await AlarmReliabilityService.requestNow();
+            },
+            child: const Text('Liberar'),
+          ),
+        ],
+      ),
+    );
+
+    await AlarmReliabilityPreferences.setAlreadyAsked();
+  }
+
+  Future<void> _checkPendingAlarmLaunch() async {
+    final alarmId = await AlarmLaunchService.consumePendingAlarmId();
+    if (alarmId == null) return;
+
+    final alarm = await Alarm.getAlarm(alarmId);
+    if (alarm == null) return;
+
+    AlarmNavigator.showAlarmScreen(alarm);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPendingAlarmLaunch();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     _requestPermissions();
-
-    Alarm.ringing.listen((alarmSet) {
-      for (final alarm in alarmSet.alarms) {
-        navigatorKey.currentState?.push(
-          MaterialPageRoute(
-            fullscreenDialog: true,
-            builder: (_) => AlarmScreen(alarmSettings: alarm),
-          ),
-        );
-      }
+    _maybeShowAlarmReliabilityPrompt();
+    Future.delayed(const Duration(seconds: 1), () {
+      Alarm.ringing.listen((alarmSet) {
+        for (final alarm in alarmSet.alarms) {
+          AlarmNavigator.showAlarmScreen(alarm);
+        }
+      });
     });
   }
 
-  // This widget is the root of your application.
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/state/user_provider.dart';
 import '../../../core/storage/notification_preferences.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../service/alarm_reliability_service.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -131,6 +132,45 @@ class _NotificationSettingsScreenState
                     ),
                   ),
                 ],
+                const SizedBox(height: 16),
+                Card(
+                  color: AppColors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(
+                            Icons.phonelink_lock_outlined,
+                            color: AppColors.secondary,
+                          ),
+                          title: Text('Confiabilidade do alarme'),
+                          subtitle: Text(
+                            'Se o alarme toca mas a tela não abre sozinha, '
+                            'é porque seu celular está bloqueando esse '
+                            'tipo de notificação por padrão — comum em '
+                            'Xiaomi, Samsung, Huawei, Oppo e outras marcas. '
+                            'Toque no botão abaixo pra liberar.',
+                          ),
+                          textColor: AppColors.secondary,
+                        ),
+                        const SizedBox(height: 12),
+                        AppButton(
+                          label: 'Corrigir agora',
+                          variant: ButtonVariant.secondary,
+                          onPressed: () async {
+                            await AlarmReliabilityService.requestNow();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
     );

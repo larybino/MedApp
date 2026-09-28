@@ -1,11 +1,11 @@
 import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/core/routing/alarm_navigator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/core/routing/routes.dart';
 import 'package:frontend/core/storage/jwt_helper.dart';
 import 'package:frontend/core/storage/secure_storage.dart';
-import 'package:frontend/core/routing/navigator_key.dart';
-import 'package:frontend/features/alarm/screen/alarm_screen.dart';
+import 'package:frontend/features/service/alarm_launch_service.dart';
 import 'package:frontend/shared/widgets/index.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -26,11 +26,24 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkSession() async {
+    final alarmId = await AlarmLaunchService.consumePendingAlarmId();
+    AlarmSettings? pendingAlarm;
+    if (alarmId != null) {
+      pendingAlarm = await Alarm.getAlarm(alarmId);
+    }
+
     final token = await SecureStorage.getToken();
 
     if (token != null && token.isNotEmpty && !JwtHelper.isExpired(token)) {
       if (mounted) context.go(Routes.home);
-      await _showRingingAlarmIfAny();
+
+      await Future.delayed(const Duration(milliseconds: 400));
+
+      if (pendingAlarm != null) {
+        AlarmNavigator.showAlarmScreen(pendingAlarm);
+      } else {
+        await _showRingingAlarmIfAny();
+      }
       return;
     }
 
@@ -45,12 +58,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final alarms = await Alarm.getAlarms();
     for (final alarm in alarms) {
       if (await Alarm.isRinging(alarm.id)) {
-        navigatorKey.currentState?.push(
-          MaterialPageRoute(
-            fullscreenDialog: true,
-            builder: (_) => AlarmScreen(alarmSettings: alarm),
-          ),
-        );
+        AlarmNavigator.showAlarmScreen(alarm);
       }
     }
   }

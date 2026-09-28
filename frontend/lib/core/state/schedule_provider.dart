@@ -12,9 +12,11 @@ class ScheduleProvider extends ChangeNotifier {
   List<ScheduledDoseModel> _doses = [];
   bool _isLoading = false;
   int? _currentUserId;
+  String? _loadError;
 
   List<ScheduledDoseModel> get doses => _doses;
   bool get isLoading => _isLoading;
+  String? get loadError => _loadError;
 
   int? get currentUserId => _currentUserId;
 
@@ -35,11 +37,15 @@ class ScheduleProvider extends ChangeNotifier {
     if (targetId == null) return;
 
     _isLoading = true;
+    _loadError = null;
     notifyListeners();
 
     try {
       _doses = await _service.getTodayDoses(targetId);
       _currentUserId = targetId;
+    } catch (e) {
+      _loadError = e.toString();
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
