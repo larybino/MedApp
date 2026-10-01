@@ -1,9 +1,16 @@
-import 'package:auto_start_flutter/auto_start_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:frontend/core/storage/alarm_reliability_preferences.dart';
 import 'package:frontend/features/service/alarm_launch_service.dart';
 
-
 class AlarmReliabilityService {
+  static Future<void> requestBasicPermissions() async {
+    await Permission.notification.request();
+    await Permission.systemAlertWindow.request();
+
+    if (await Permission.scheduleExactAlarm.isDenied) {
+      await Permission.scheduleExactAlarm.request();
+    }
+  }
 
   static Future<void> requestOnFirstLaunch() async {
     final alreadyAsked = await AlarmReliabilityPreferences.getAlreadyAsked();
@@ -14,19 +21,7 @@ class AlarmReliabilityService {
   }
 
   static Future<void> requestNow() async {
-    try {
-      final autoStartAvailable = await isAutoStartAvailable ?? false;
-      if (autoStartAvailable) {
-        await getAutoStartPermission();
-      }
-
-      final batteryOptimizationDisabled =
-          await isBatteryOptimizationDisabled ?? true;
-      if (!batteryOptimizationDisabled) {
-        await disableBatteryOptimization();
-      }
-    } catch (_) {
-    }
+    await requestBasicPermissions();
 
     final canUseFullScreenIntent =
         await AlarmLaunchService.canUseFullScreenIntent();

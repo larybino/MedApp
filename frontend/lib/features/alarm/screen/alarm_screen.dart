@@ -52,18 +52,10 @@ class _AlarmScreenState extends State<AlarmScreen>
     _isProcessing = true;
 
     final navigator = Navigator.of(context);
-    final messenger = ScaffoldMessenger.of(context);
     final scheduleProvider = context.read<ScheduleProvider>();
     final doseId = widget.alarmSettings.id;
 
     debugPrint('[AlarmScreen] _stopAlarm iniciado (dose $doseId)');
-    await Alarm.stop(doseId);
-
-    if (!mounted) {
-      debugPrint('[AlarmScreen] unmounted logo após Alarm.stop (dose $doseId) — diálogo não será exibido');
-      _isProcessing = false;
-      return;
-    }
 
     final tomou = await showDialog<bool>(
       context: context,
@@ -94,40 +86,18 @@ class _AlarmScreenState extends State<AlarmScreen>
 
     if (tomou == true) {
       if (mounted) setState(() => _isConfirming = true);
-      try {
-        await scheduleProvider.confirmDose(doseId);
-        debugPrint('[AlarmScreen] confirmDose OK (dose $doseId)');
-
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Dose confirmada com sucesso!')),
-        );
-        if (navigator.canPop()) {
-          navigator.pop();
-        }
-      } catch (e) {
-        debugPrint('[AlarmScreen] confirmDose FALHOU (dose $doseId): $e');
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              'Erro ao confirmar: $e\nToque em "Parar alarme" para tentar novamente.',
-            ),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 6),
-          ),
-        );
-      } finally {
-        if (mounted) setState(() => _isConfirming = false);
-      }
+      await Alarm.stop(doseId);
+      if (navigator.canPop()) navigator.pop();
+      await scheduleProvider.confirmDose(doseId);
+      debugPrint('[AlarmScreen] confirmação registrada (dose $doseId)');
     } else if (tomou == false) {
       await _doSnooze(doseId);
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Alarme adiado para daqui a 10 minutos')),
-      );
       if (navigator.canPop()) {
         navigator.pop();
       }
     } else {
       debugPrint('[AlarmScreen] diálogo retornou null (dose $doseId) — nenhuma ação tomada');
+      if (navigator.canPop()) navigator.pop();
     }
 
     _isProcessing = false;

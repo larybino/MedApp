@@ -16,7 +16,6 @@ import 'core/theme/app_theme.dart';
 import 'core/routing/navigator_key.dart';
 import 'core/routing/routes.dart';
 import 'core/state/user_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,12 +34,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Future<void> _requestPermissions() async {
-    await Permission.notification.request();
-    await Permission.systemAlertWindow.request();
-
-    if (await Permission.scheduleExactAlarm.isDenied) {
-      await Permission.scheduleExactAlarm.request();
-    }
+    await AlarmReliabilityService.requestBasicPermissions();
   }
 
  Future<void> _maybeShowAlarmReliabilityPrompt() async {
@@ -95,6 +89,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _checkPendingAlarmLaunch();
+      navigatorKey.currentContext
+          ?.read<ScheduleProvider>()
+          .syncPendingConfirmations();
     }
   }
 

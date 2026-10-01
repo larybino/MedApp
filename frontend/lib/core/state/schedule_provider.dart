@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/storage/notification_preferences.dart';
+import 'package:frontend/core/storage/offline_dose_queue.dart';
 import 'package:frontend/features/models/schedule_dose_model.dart';
 import 'package:frontend/features/service/alarm_service.dart';
 import 'package:frontend/features/service/notification_service.dart';
@@ -69,14 +70,31 @@ class ScheduleProvider extends ChangeNotifier {
   }
 
   Future<void> confirmDose(int doseId, {int? userId, String? date}) async {
-    await _service.confirmDose(doseId);
+    await OfflineDoseQueue.enqueue(doseId);
+    var synchronized = true;
+    try {
+      await _service.confirmDose(doseId);
+      await OfflineDoseQueue.remove(doseId);
+    } catch (_) {
+      synchronized = false;
+    }
+
     await AlarmService.cancelAlarm(doseId);
     await NotificationService.cancelConfirmationNotification(doseId);
-    if (date != null) {
-      await loadDosesByDate(date, userId: userId);
-      return;
+
+    if (synchronized) {
+      try {
+        if (date != null) {
+          await loadDosesByDate(date, userId: userId);
+        } else {
+          await loadTodayDoses(userId: userId);
+        }
+      } catch (_) {}
     }
-    await loadTodayDoses(userId: userId);
+  }
+
+  Future<void> syncPendingConfirmations() async {
+    await OfflineDoseQueue.sync();
   }
 
   Future<void> unconfirmDose(int doseId, {int? userId, String? date}) async {

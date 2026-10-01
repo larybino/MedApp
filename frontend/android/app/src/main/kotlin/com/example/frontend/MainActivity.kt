@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.WindowManager
 import com.gdelataillade.alarm.alarm.AlarmService
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -29,8 +30,31 @@ class MainActivity : FlutterActivity() {
         handleAlarmIntent(intent)
     }
 
+    private fun configureAlarmWindow(isAlarmLaunch: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(isAlarmLaunch)
+            setTurnScreenOn(isAlarmLaunch)
+        } else {
+            val alarmFlags =
+                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            if (isAlarmLaunch) {
+                window.addFlags(alarmFlags)
+            } else {
+                window.clearFlags(alarmFlags)
+            }
+        }
+        if (isAlarmLaunch) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+
     private fun handleAlarmIntent(intent: Intent) {
-        if (intent.action != AlarmService.ACTION_RING) return
+        val isAlarmLaunch = intent.action == AlarmService.ACTION_RING
+        configureAlarmWindow(isAlarmLaunch)
+        if (!isAlarmLaunch) return
 
         val alarmId = intent.getIntExtra(AlarmService.EXTRA_ALARM_ID, -1)
         if (alarmId == -1) return

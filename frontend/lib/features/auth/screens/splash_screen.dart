@@ -51,7 +51,13 @@ class _SplashScreenState extends State<SplashScreen> {
       await SecureStorage.clear();
     }
 
-    if (mounted) setState(() => _isChecking = false);
+    if (!mounted) return;
+    setState(() => _isChecking = false);
+
+    if (pendingAlarm != null) {
+      await Future<void>.delayed(Duration.zero);
+      if (mounted) AlarmNavigator.showAlarmScreen(pendingAlarm);
+    }
   }
 
   Future<void> _showRingingAlarmIfAny() async {

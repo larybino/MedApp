@@ -3,6 +3,7 @@ import 'package:frontend/core/utils/error_handler.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_endpoints.dart';
 import '../../core/storage/secure_storage.dart';
+import '../../core/storage/offline_dose_queue.dart';
 
 class AuthService {
   final Dio _dio = ApiClient.instance;
@@ -25,6 +26,7 @@ class AuthService {
       await SecureStorage.saveToken(token);
       await SecureStorage.saveUserId(userId);
       await SecureStorage.saveRole(role);
+      await OfflineDoseQueue.sync();
     } on DioException catch (e) {
       throw ApiErrorHandler.handle(e);
     }
@@ -58,6 +60,7 @@ class AuthService {
       await SecureStorage.saveToken(token);
       await SecureStorage.saveUserId(userId);
       await SecureStorage.saveRole(role);
+      await OfflineDoseQueue.sync();
     } on DioException catch (e) {
       throw ApiErrorHandler.handle(e);
     }
